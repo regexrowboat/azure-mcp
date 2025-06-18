@@ -13,6 +13,8 @@ public static partial class OptionDefinitions
         public const string TenantName = "tenant";
         public const string SubscriptionName = "subscription";
         public const string ResourceGroupName = "resource-group";
+        public const string ResourceTypeName = "resource-type";
+        public const string ResourceNameName = "resource-name";
         public const string AuthMethodName = "auth-method";
 
         public static readonly Option<string> Tenant = new(
@@ -44,6 +46,22 @@ public static partial class OptionDefinitions
         public static readonly Option<string> ResourceGroup = new(
             $"--{ResourceGroupName}",
             "The name of the Azure resource group. This is a logical container for Azure resources."
+        )
+        {
+            IsRequired = false
+        };
+
+        public static readonly Option<string> ResourceType = new(
+            $"--{ResourceTypeName}",
+            "The Azure resource type (e.g., 'Microsoft.Storage/storageAccounts', 'Microsoft.Compute/virtualMachines'). If not specified, will attempt to infer from resource name."
+        )
+        {
+            IsRequired = false
+        };
+
+        public static readonly Option<string> ResourceName = new(
+            $"--{ResourceNameName}",
+            "The name of the Azure resource to query metrics for."
         )
         {
             IsRequired = true
