@@ -75,6 +75,8 @@ public static class MonitorOptionDefinitions
     {
         // Metrics related options
         public const string ResourceIdName = "resource-id";
+        public const string ResourceTypeName = "resource-type";
+        public const string ResourceNameName = "resource-name";
         public const string MetricNamespaceName = "metric-namespace";
         public const string MetricNamesName = "metric-names";
         public const string StartTimeName = "start-time";
@@ -171,6 +173,22 @@ public static class MonitorOptionDefinitions
         )
         {
             IsRequired = false
+        };
+
+        public static readonly Option<string> ResourceType = new(
+            $"--{ResourceTypeName}",
+            "The Azure resource type (e.g., 'Microsoft.Storage/storageAccounts', 'Microsoft.Compute/virtualMachines'). If not specified, will attempt to infer from resource name."
+        )
+        {
+            IsRequired = false
+        };
+
+        public static readonly Option<string> ResourceName = new(
+            $"--{ResourceNameName}",
+            "The name of the Azure resource to query metrics for."
+        )
+        {
+            IsRequired = true
         };
     }
 

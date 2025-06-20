@@ -22,7 +22,6 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
     private readonly Option<string> _metricNamespaceOption = MonitorOptionDefinitions.Metrics.MetricNamespace;
     private readonly Option<string> _searchStringOption = MonitorOptionDefinitions.Metrics.SearchString;
     private readonly Option<int> _limitOption = MonitorOptionDefinitions.Metrics.DefinitionsLimit;
-    private readonly Option<string> _optionalResourceGroupOption = MonitorOptionDefinitions.Metrics.OptionalResourceGroup;
 
     public override string Name => "definitions";
 

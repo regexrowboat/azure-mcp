@@ -19,8 +19,8 @@ public abstract class BaseMetricsCommand<
     : SubscriptionCommand<TOptions>
     where TOptions : SubscriptionOptions, IMetricsOptions, new()
 {
-    protected readonly Option<string> _resourceTypeOption = OptionDefinitions.Common.ResourceType;
-    protected readonly Option<string> _resourceNameOption = OptionDefinitions.Common.ResourceName;
+    protected readonly Option<string> _resourceTypeOption = MonitorOptionDefinitions.Metrics.ResourceType;
+    protected readonly Option<string> _resourceNameOption = MonitorOptionDefinitions.Metrics.ResourceName;
     protected readonly Option<string> _optionalResourceGroupOption = MonitorOptionDefinitions.Metrics.OptionalResourceGroup;
 
     protected override void RegisterOptions(Command command)
