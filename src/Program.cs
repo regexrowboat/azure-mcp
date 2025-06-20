@@ -7,7 +7,6 @@ using AzureMcp.Commands;
 using AzureMcp.Services.Azure.ResourceGroup;
 using AzureMcp.Services.Azure.Subscription;
 using AzureMcp.Services.Azure.Tenant;
-using AzureMcp.Services.Azure;
 using AzureMcp.Services.Caching;
 using AzureMcp.Services.ProcessExecution;
 using Microsoft.Extensions.DependencyInjection;
