@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using AzureMcp.Areas.Monitor.Options;
 using AzureMcp.Areas.Monitor.Options.Metrics;
 using AzureMcp.Commands;
 using AzureMcp.Commands.Subscription;
@@ -20,13 +21,14 @@ public abstract class BaseMetricsCommand<
 {
     protected readonly Option<string> _resourceTypeOption = OptionDefinitions.Common.ResourceType;
     protected readonly Option<string> _resourceNameOption = OptionDefinitions.Common.ResourceName;
+    protected readonly Option<string> _optionalResourceGroupOption = MonitorOptionDefinitions.Metrics.OptionalResourceGroup;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
         command.AddOption(_resourceTypeOption);
         command.AddOption(_resourceNameOption);
-        command.AddOption(_resourceGroupOption);
+        command.AddOption(_optionalResourceGroupOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
@@ -34,7 +36,7 @@ public abstract class BaseMetricsCommand<
         var options = base.BindOptions(parseResult);
         options.ResourceType = parseResult.GetValueForOption(_resourceTypeOption);
         options.ResourceName = parseResult.GetValueForOption(_resourceNameOption);
-        options.ResourceGroup = parseResult.GetValueForOption(_resourceGroupOption);
+        options.ResourceGroup = parseResult.GetValueForOption(_optionalResourceGroupOption);
         return options;
     }
 }

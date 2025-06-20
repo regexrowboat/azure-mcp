@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AzureMcp.Models.Option;
+
 namespace AzureMcp.Areas.Monitor.Options;
 
 public static class MonitorOptionDefinitions
@@ -158,6 +160,14 @@ public static class MonitorOptionDefinitions
             $"--{MaxBucketsName}",
             () => 50,
             "The maximum number of time buckets to return. Defaults to 50."
+        )
+        {
+            IsRequired = false
+        };
+
+        public static readonly Option<string> OptionalResourceGroup = new(
+            $"--{OptionDefinitions.Common.ResourceGroupName}",
+            "The name of the Azure resource group. This is a logical container for Azure resources."
         )
         {
             IsRequired = false

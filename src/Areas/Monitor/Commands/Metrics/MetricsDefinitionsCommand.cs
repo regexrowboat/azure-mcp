@@ -22,6 +22,7 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
     private readonly Option<string> _metricNamespaceOption = MonitorOptionDefinitions.Metrics.MetricNamespace;
     private readonly Option<string> _searchStringOption = MonitorOptionDefinitions.Metrics.SearchString;
     private readonly Option<int> _limitOption = MonitorOptionDefinitions.Metrics.DefinitionsLimit;
+    private readonly Option<string> _optionalResourceGroupOption = MonitorOptionDefinitions.Metrics.OptionalResourceGroup;
 
     public override string Name => "definitions";
 
@@ -31,7 +32,7 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
         Required options:
         - {_resourceNameOption.Name}: {_resourceNameOption.Description}
         Optional options:
-        - {_resourceGroupOption.Name}: {_resourceGroupOption.Description}
+        - {_optionalResourceGroupOption.Name}: {_optionalResourceGroupOption.Description}
         - {_resourceTypeOption.Name}: {_resourceTypeOption.Description}
         - {_metricNamespaceOption.Name}: {_metricNamespaceOption.Description}
         - {_searchStringOption.Name}: {_searchStringOption.Description}
