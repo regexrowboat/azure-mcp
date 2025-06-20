@@ -185,7 +185,7 @@ public class MonitorCommandTests(LiveTestFixture fixture, ITestOutputHelper outp
     {
         // Example resource ID - uses a storage account that should exist from the test fixture
         string resourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{Settings.ResourceBaseName}";
-        
+
         var result = await CallToolAsync(
             "azmcp-monitor-metrics-definitions",
             new()
@@ -209,7 +209,7 @@ public class MonitorCommandTests(LiveTestFixture fixture, ITestOutputHelper outp
 
         // Validate at least one metric definition has all expected properties populated
         var firstDefinition = resultsArray.EnumerateArray().First();
-        
+
         // Verify required properties exist and are populated
         Assert.True(firstDefinition.TryGetProperty("name", out var name));
         Assert.Equal(JsonValueKind.String, name.ValueKind);
@@ -257,7 +257,7 @@ public class MonitorCommandTests(LiveTestFixture fixture, ITestOutputHelper outp
     {
         // Example resource ID - uses a storage account that should exist from the test fixture
         string resourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{Settings.ResourceBaseName}";
-        
+
         var result = await CallToolAsync(
             "azmcp-monitor-metrics-query",
             new()
@@ -271,50 +271,50 @@ public class MonitorCommandTests(LiveTestFixture fixture, ITestOutputHelper outp
         var resultsArray = result.AssertProperty("results");
         Assert.Equal(JsonValueKind.Array, resultsArray.ValueKind);
         Assert.NotEmpty(resultsArray.EnumerateArray());
-        
+
         // Validate the first metric has all expected properties
         var firstMetric = resultsArray.EnumerateArray().First();
-        
+
         // Verify metric-level properties
         Assert.True(firstMetric.TryGetProperty("name", out var name));
         Assert.Equal(JsonValueKind.String, name.ValueKind);
         Assert.False(string.IsNullOrEmpty(name.GetString()));
-        
+
         Assert.True(firstMetric.TryGetProperty("unit", out var unit));
         Assert.Equal(JsonValueKind.String, unit.ValueKind);
         Assert.False(string.IsNullOrEmpty(unit.GetString()));
-        
+
         Assert.True(firstMetric.TryGetProperty("timeSeries", out var timeSeries));
         Assert.Equal(JsonValueKind.Array, timeSeries.ValueKind);
         Assert.NotEmpty(timeSeries.EnumerateArray());
-        
+
         // Validate the first timeSeries entry has all expected properties
         var firstTimeSeries = timeSeries.EnumerateArray().First();
-        
+
         Assert.True(firstTimeSeries.TryGetProperty("metadata", out var metadata));
         Assert.Equal(JsonValueKind.Object, metadata.ValueKind);
-        
+
         Assert.True(firstTimeSeries.TryGetProperty("start", out var start));
         Assert.Equal(JsonValueKind.String, start.ValueKind);
         Assert.False(string.IsNullOrEmpty(start.GetString()));
         // Verify it's a valid ISO date format
         Assert.True(DateTime.TryParse(start.GetString(), out _));
-        
+
         Assert.True(firstTimeSeries.TryGetProperty("end", out var end));
         Assert.Equal(JsonValueKind.String, end.ValueKind);
         Assert.False(string.IsNullOrEmpty(end.GetString()));
         // Verify it's a valid ISO date format
         Assert.True(DateTime.TryParse(end.GetString(), out _));
-        
+
         Assert.True(firstTimeSeries.TryGetProperty("interval", out var interval));
         Assert.Equal(JsonValueKind.String, interval.ValueKind);
         Assert.False(string.IsNullOrEmpty(interval.GetString()));
         // Verify it follows duration format (starts with PT)
         Assert.StartsWith("PT", interval.GetString());
-        
+
         Assert.True(firstTimeSeries.TryGetProperty("avgBuckets", out var avgBuckets));
         Assert.Equal(JsonValueKind.Array, avgBuckets.ValueKind);
-        
+
         // Verify avgBuckets contains numeric values
         foreach (var bucket in avgBuckets.EnumerateArray())
         {

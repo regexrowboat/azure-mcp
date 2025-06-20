@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
 using AzureMcp.Areas.Monitor.Commands.Metrics;
 using AzureMcp.Areas.Monitor.Models;
 using AzureMcp.Areas.Monitor.Services;
@@ -10,8 +12,6 @@ using AzureMcp.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Xunit;
 
 namespace AzureMcp.Tests.Areas.Monitor.UnitTests.Metrics;
@@ -27,11 +27,11 @@ public class MetricsDefinitionsCommandTests
     {
         _service = Substitute.For<IMonitorMetricsService>();
         _logger = Substitute.For<ILogger<MetricsDefinitionsCommand>>();
-        
+
         var collection = new ServiceCollection();
         collection.AddSingleton(_service);
         _serviceProvider = collection.BuildServiceProvider();
-        
+
         _command = new(_logger);
     }
 
@@ -76,10 +76,10 @@ public class MetricsDefinitionsCommandTests
     public void GetCommand_RegistersAllRequiredOptions()
     {
         var command = _command.GetCommand();
-        
+
         // Check that all required options are present
         var optionNames = command.Options.Select(o => o.Name).ToList();
-        
+
         Assert.Contains("subscription", optionNames);
         Assert.Contains("resource-type", optionNames);
         Assert.Contains("resource-name", optionNames);
@@ -87,7 +87,7 @@ public class MetricsDefinitionsCommandTests
         Assert.Contains("search-string", optionNames);
         Assert.Contains("limit", optionNames);
         Assert.Contains("tenant", optionNames);
-        
+
         // Note: resource-group may not be registered as a separate option if resource-id parsing is used
     }
 
@@ -235,7 +235,7 @@ public class MetricsDefinitionsCommandTests
         // Assert
         Assert.Equal(200, response.Status);
         Assert.NotNull(response.Results);
-        
+
         // Verify the service was called with the search string
         await _service.Received(1).ListMetricDefinitionsAsync(
             Arg.Any<string>(),

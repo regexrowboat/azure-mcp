@@ -36,16 +36,16 @@ public class MonitorMetricsServiceTests
 
         // Setup default behaviors
         _resourceResolverService.ResolveResourceIdAsync(
-                Arg.Any<string>(), 
-                Arg.Any<string?>(), 
-                Arg.Any<string?>(), 
-                Arg.Any<string>(), 
-                Arg.Any<string?>(), 
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>())
             .Returns(new ResourceIdentifier(TestResourceId));
 
         _metricsQueryClientService.CreateClientAsync(
-                Arg.Any<string?>(), 
+                Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>())
             .Returns(_metricsQueryClient);
     }
@@ -64,7 +64,7 @@ public class MonitorMetricsServiceTests
     public void Constructor_WithNullResourceResolverService_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
+        Assert.Throws<ArgumentNullException>(() =>
             new MonitorMetricsService(null!, _metricsQueryClientService));
     }
 
@@ -72,7 +72,7 @@ public class MonitorMetricsServiceTests
     public void Constructor_WithNullMetricsQueryClientService_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => 
+        Assert.Throws<ArgumentNullException>(() =>
             new MonitorMetricsService(_resourceResolverService, null!));
     }
 
@@ -92,10 +92,10 @@ public class MonitorMetricsServiceTests
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(() =>
             _service.QueryMetricsAsync(
-                TestSubscription, 
-                TestResourceGroup, 
-                TestResourceType, 
-                TestResourceName, 
+                TestSubscription,
+                TestResourceGroup,
+                TestResourceType,
+                TestResourceName,
                 metricNames,
                 startTime: invalidStartTime));
 
@@ -114,10 +114,10 @@ public class MonitorMetricsServiceTests
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(() =>
             _service.QueryMetricsAsync(
-                TestSubscription, 
-                TestResourceGroup, 
-                TestResourceType, 
-                TestResourceName, 
+                TestSubscription,
+                TestResourceGroup,
+                TestResourceType,
+                TestResourceName,
                 metricNames,
                 endTime: invalidEndTime));
 
@@ -136,10 +136,10 @@ public class MonitorMetricsServiceTests
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(() =>
             _service.QueryMetricsAsync(
-                TestSubscription, 
-                TestResourceGroup, 
-                TestResourceType, 
-                TestResourceName, 
+                TestSubscription,
+                TestResourceGroup,
+                TestResourceType,
+                TestResourceName,
                 metricNames,
                 interval: invalidInterval));
 
@@ -160,20 +160,20 @@ public class MonitorMetricsServiceTests
         {
             await Assert.ThrowsAsync<ArgumentNullException>(() =>
                 _service.QueryMetricsAsync(
-                    subscription!, 
-                    TestResourceGroup, 
-                    TestResourceType, 
-                    TestResourceName, 
+                    subscription!,
+                    TestResourceGroup,
+                    TestResourceType,
+                    TestResourceName,
                     metricNames));
         }
         else
         {
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 _service.QueryMetricsAsync(
-                    subscription, 
-                    TestResourceGroup, 
-                    TestResourceType, 
-                    TestResourceName, 
+                    subscription,
+                    TestResourceGroup,
+                    TestResourceType,
+                    TestResourceName,
                     metricNames));
         }
     }
@@ -191,20 +191,20 @@ public class MonitorMetricsServiceTests
         {
             await Assert.ThrowsAsync<ArgumentNullException>(() =>
                 _service.QueryMetricsAsync(
-                    TestSubscription, 
-                    TestResourceGroup, 
-                    TestResourceType, 
-                    resourceName!, 
+                    TestSubscription,
+                    TestResourceGroup,
+                    TestResourceType,
+                    resourceName!,
                     metricNames));
         }
         else
         {
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 _service.QueryMetricsAsync(
-                    TestSubscription, 
-                    TestResourceGroup, 
-                    TestResourceType, 
-                    resourceName, 
+                    TestSubscription,
+                    TestResourceGroup,
+                    TestResourceType,
+                    resourceName,
                     metricNames));
         }
     }
@@ -215,10 +215,10 @@ public class MonitorMetricsServiceTests
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
             _service.QueryMetricsAsync(
-                TestSubscription, 
-                TestResourceGroup, 
-                TestResourceType, 
-                TestResourceName, 
+                TestSubscription,
+                TestResourceGroup,
+                TestResourceType,
+                TestResourceName,
                 null!));
     }
 
@@ -228,21 +228,21 @@ public class MonitorMetricsServiceTests
         // Arrange
         var metricNames = new[] { "Transactions" };
         _resourceResolverService.ResolveResourceIdAsync(
-                Arg.Any<string>(), 
-                Arg.Any<string?>(), 
-                Arg.Any<string?>(), 
-                Arg.Any<string>(), 
-                Arg.Any<string?>(), 
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception("Resource not found"));
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(() =>
             _service.QueryMetricsAsync(
-                TestSubscription, 
-                TestResourceGroup, 
-                TestResourceType, 
-                TestResourceName, 
+                TestSubscription,
+                TestResourceGroup,
+                TestResourceType,
+                TestResourceName,
                 metricNames));
 
         Assert.Contains("Error querying metrics", exception.Message);
@@ -255,17 +255,17 @@ public class MonitorMetricsServiceTests
         // Arrange
         var metricNames = new[] { "Transactions" };
         _metricsQueryClientService.CreateClientAsync(
-                Arg.Any<string?>(), 
+                Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception("Authentication failed"));
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(() =>
             _service.QueryMetricsAsync(
-                TestSubscription, 
-                TestResourceGroup, 
-                TestResourceType, 
-                TestResourceName, 
+                TestSubscription,
+                TestResourceGroup,
+                TestResourceType,
+                TestResourceName,
                 metricNames));
 
         Assert.Contains("Error querying metrics", exception.Message);
@@ -286,18 +286,18 @@ public class MonitorMetricsServiceTests
         {
             await Assert.ThrowsAsync<ArgumentNullException>(() =>
                 _service.ListMetricDefinitionsAsync(
-                    subscription!, 
-                    TestResourceGroup, 
-                    TestResourceType, 
+                    subscription!,
+                    TestResourceGroup,
+                    TestResourceType,
                     TestResourceName));
         }
         else
         {
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 _service.ListMetricDefinitionsAsync(
-                    subscription, 
-                    TestResourceGroup, 
-                    TestResourceType, 
+                    subscription,
+                    TestResourceGroup,
+                    TestResourceType,
                     TestResourceName));
         }
     }
@@ -312,18 +312,18 @@ public class MonitorMetricsServiceTests
         {
             await Assert.ThrowsAsync<ArgumentNullException>(() =>
                 _service.ListMetricDefinitionsAsync(
-                    TestSubscription, 
-                    TestResourceGroup, 
-                    TestResourceType, 
+                    TestSubscription,
+                    TestResourceGroup,
+                    TestResourceType,
                     resourceName!));
         }
         else
         {
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 _service.ListMetricDefinitionsAsync(
-                    TestSubscription, 
-                    TestResourceGroup, 
-                    TestResourceType, 
+                    TestSubscription,
+                    TestResourceGroup,
+                    TestResourceType,
                     resourceName));
         }
     }
@@ -342,18 +342,18 @@ public class MonitorMetricsServiceTests
         {
             await Assert.ThrowsAsync<ArgumentNullException>(() =>
                 _service.ListMetricNamespacesAsync(
-                    subscription!, 
-                    TestResourceGroup, 
-                    TestResourceType, 
+                    subscription!,
+                    TestResourceGroup,
+                    TestResourceType,
                     TestResourceName));
         }
         else
         {
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 _service.ListMetricNamespacesAsync(
-                    subscription, 
-                    TestResourceGroup, 
-                    TestResourceType, 
+                    subscription,
+                    TestResourceGroup,
+                    TestResourceType,
                     TestResourceName));
         }
     }
@@ -368,18 +368,18 @@ public class MonitorMetricsServiceTests
         {
             await Assert.ThrowsAsync<ArgumentNullException>(() =>
                 _service.ListMetricNamespacesAsync(
-                    TestSubscription, 
-                    TestResourceGroup, 
-                    TestResourceType, 
+                    TestSubscription,
+                    TestResourceGroup,
+                    TestResourceType,
                     resourceName!));
         }
         else
         {
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 _service.ListMetricNamespacesAsync(
-                    TestSubscription, 
-                    TestResourceGroup, 
-                    TestResourceType, 
+                    TestSubscription,
+                    TestResourceGroup,
+                    TestResourceType,
                     resourceName));
         }
     }
@@ -392,19 +392,20 @@ public class MonitorMetricsServiceTests
         // Arrange
         var metricNames = new[] { "Transactions", "Availability" };
         var mockResponse = CreateMockMetricsQueryResponse();
-        
+
         _metricsQueryClient.QueryResourceAsync(
-                Arg.Any<string>(), 
-                Arg.Any<IEnumerable<string>>(), 
-                Arg.Any<MetricsQueryOptions>())
+                Arg.Any<string>(),
+                Arg.Any<IEnumerable<string>>(),
+                Arg.Any<MetricsQueryOptions>(),
+                cancellationToken: Arg.Any<CancellationToken>())
             .Returns(mockResponse);
 
         // Act
         var result = await _service.QueryMetricsAsync(
-            TestSubscription, 
-            TestResourceGroup, 
-            TestResourceType, 
-            TestResourceName, 
+            TestSubscription,
+            TestResourceGroup,
+            TestResourceType,
+            TestResourceName,
             metricNames);
 
         // Assert
@@ -424,20 +425,21 @@ public class MonitorMetricsServiceTests
         var startTime = "2023-01-01T00:00:00Z";
         var endTime = "2023-01-02T00:00:00Z";
         var mockResponse = CreateMockMetricsQueryResponse();
-        
+
         MetricsQueryOptions? capturedOptions = null;
         _metricsQueryClient.QueryResourceAsync(
-                Arg.Any<string>(), 
-                Arg.Any<IEnumerable<string>>(), 
-                Arg.Do<MetricsQueryOptions>(opts => capturedOptions = opts))
+                Arg.Any<string>(),
+                Arg.Any<IEnumerable<string>>(),
+                Arg.Do<MetricsQueryOptions>(opts => capturedOptions = opts),
+                cancellationToken: Arg.Any<CancellationToken>())
             .Returns(mockResponse);
 
         // Act
         await _service.QueryMetricsAsync(
-            TestSubscription, 
-            TestResourceGroup, 
-            TestResourceType, 
-            TestResourceName, 
+            TestSubscription,
+            TestResourceGroup,
+            TestResourceType,
+            TestResourceName,
             metricNames,
             startTime: startTime,
             endTime: endTime);
@@ -456,20 +458,21 @@ public class MonitorMetricsServiceTests
         var metricNames = new[] { "Transactions" };
         var interval = "PT5M";
         var mockResponse = CreateMockMetricsQueryResponse();
-        
+
         MetricsQueryOptions? capturedOptions = null;
         _metricsQueryClient.QueryResourceAsync(
-                Arg.Any<string>(), 
-                Arg.Any<IEnumerable<string>>(), 
-                Arg.Do<MetricsQueryOptions>(opts => capturedOptions = opts))
+                Arg.Any<string>(),
+                Arg.Any<IEnumerable<string>>(),
+                Arg.Do<MetricsQueryOptions>(opts => capturedOptions = opts),
+                cancellationToken: Arg.Any<CancellationToken>())
             .Returns(mockResponse);
 
         // Act
         await _service.QueryMetricsAsync(
-            TestSubscription, 
-            TestResourceGroup, 
-            TestResourceType, 
-            TestResourceName, 
+            TestSubscription,
+            TestResourceGroup,
+            TestResourceType,
+            TestResourceName,
             metricNames,
             interval: interval);
 
@@ -485,20 +488,21 @@ public class MonitorMetricsServiceTests
         var metricNames = new[] { "Transactions" };
         var aggregation = "Average,Maximum,Count";
         var mockResponse = CreateMockMetricsQueryResponse();
-        
+
         MetricsQueryOptions? capturedOptions = null;
         _metricsQueryClient.QueryResourceAsync(
-                Arg.Any<string>(), 
-                Arg.Any<IEnumerable<string>>(), 
-                Arg.Do<MetricsQueryOptions>(opts => capturedOptions = opts))
+                Arg.Any<string>(),
+                Arg.Any<IEnumerable<string>>(),
+                Arg.Do<MetricsQueryOptions>(opts => capturedOptions = opts),
+                cancellationToken: Arg.Any<CancellationToken>())
             .Returns(mockResponse);
 
         // Act
         await _service.QueryMetricsAsync(
-            TestSubscription, 
-            TestResourceGroup, 
-            TestResourceType, 
-            TestResourceName, 
+            TestSubscription,
+            TestResourceGroup,
+            TestResourceType,
+            TestResourceName,
             metricNames,
             aggregation: aggregation);
 
@@ -517,19 +521,20 @@ public class MonitorMetricsServiceTests
         // Arrange
         var metricNames = new[] { "Transactions" };
         var mockResponse = CreateMockMetricsQueryResponse();
-        
+
         _metricsQueryClient.QueryResourceAsync(
-                Arg.Any<string>(), 
-                Arg.Any<IEnumerable<string>>(), 
-                Arg.Any<MetricsQueryOptions>())
+                Arg.Any<string>(),
+                Arg.Any<IEnumerable<string>>(),
+                Arg.Any<MetricsQueryOptions>(),
+                cancellationToken: Arg.Any<CancellationToken>())
             .Returns(mockResponse);
 
         // Act
         await _service.QueryMetricsAsync(
-            TestSubscription, 
-            TestResourceGroup, 
-            TestResourceType, 
-            TestResourceName, 
+            TestSubscription,
+            TestResourceGroup,
+            TestResourceType,
+            TestResourceName,
             metricNames,
             tenant: TestTenant);
 
@@ -551,17 +556,18 @@ public class MonitorMetricsServiceTests
         var mockResponse = CreateMockMetricsQueryResponse();
 
         _metricsQueryClient.QueryResourceAsync(
-                Arg.Any<string>(), 
-                Arg.Any<IEnumerable<string>>(), 
-                Arg.Any<MetricsQueryOptions>())
+                Arg.Any<string>(),
+                Arg.Any<IEnumerable<string>>(),
+                Arg.Any<MetricsQueryOptions>(),
+                cancellationToken: Arg.Any<CancellationToken>())
             .Returns(mockResponse);
 
         // Act
         await _service.QueryMetricsAsync(
-            TestSubscription, 
-            TestResourceGroup, 
-            TestResourceType, 
-            TestResourceName, 
+            TestSubscription,
+            TestResourceGroup,
+            TestResourceType,
+            TestResourceName,
             metricNames,
             tenant: TestTenant);
 
@@ -589,7 +595,7 @@ public class MonitorMetricsServiceTests
             MonitorQueryModelFactory.MetricResult(
                 id: "availability-metric",
                 resourceType: "Microsoft.Storage/storageAccounts",
-                name: "Availability", 
+                name: "Availability",
                 unit: MetricUnit.Percent,
                 timeSeries: new List<MetricTimeSeriesElement>())
         };

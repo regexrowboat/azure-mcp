@@ -116,8 +116,8 @@ public class ResourceResolverServiceTests
         var resourceName = "nonexistent-resource";
 
         var emptyAsyncPageable = CreateEmptyAsyncPageable();
-        
-        _subscriptionResource.GetGenericResourcesAsync().Returns(emptyAsyncPageable);
+
+        _subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(emptyAsyncPageable);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(() =>
@@ -137,8 +137,8 @@ public class ResourceResolverServiceTests
         var resource2 = CreateMockGenericResource($"/subscriptions/{subscription}/resourceGroups/rg2/providers/Microsoft.Compute/virtualMachines/{resourceName}", "rg2", "Microsoft.Compute/virtualMachines", resourceName);
 
         var resourcesAsyncPageable = CreateAsyncPageableWithItems(resource1, resource2);
-        
-        _subscriptionResource.GetGenericResourcesAsync().Returns(resourcesAsyncPageable);
+
+        _subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(resourcesAsyncPageable);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(() =>
@@ -160,8 +160,8 @@ public class ResourceResolverServiceTests
 
         var subscriptionResource = Substitute.For<SubscriptionResource>();
         var resourcesAsyncPageable = CreateAsyncPageableWithItems(resource);
-        
-        subscriptionResource.GetGenericResourcesAsync().Returns(resourcesAsyncPageable);
+
+        subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(resourcesAsyncPageable);
         _subscriptionService.GetSubscription(subscription, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(subscriptionResource);
 
@@ -186,8 +186,8 @@ public class ResourceResolverServiceTests
         var resource2 = CreateMockGenericResource($"/subscriptions/{subscription}/resourceGroups/rg2/providers/Microsoft.Storage/storageAccounts/{resourceName}", "rg2", "Microsoft.Storage/storageAccounts", resourceName);
 
         var resourcesAsyncPageable = CreateAsyncPageableWithItems(resource1, resource2);
-        
-        _subscriptionResource.GetGenericResourcesAsync().Returns(resourcesAsyncPageable);
+
+        _subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(resourcesAsyncPageable);
 
         // Act
         var result = await _service.ResolveResourceIdAsync(subscription, resourceGroup, null, resourceName);
@@ -210,8 +210,8 @@ public class ResourceResolverServiceTests
         var resource2 = CreateMockGenericResource($"/subscriptions/{subscription}/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/{resourceName}", "rg1", "Microsoft.Compute/virtualMachines", resourceName);
 
         var resourcesAsyncPageable = CreateAsyncPageableWithItems(resource1, resource2);
-        
-        _subscriptionResource.GetGenericResourcesAsync().Returns(resourcesAsyncPageable);
+
+        _subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(resourcesAsyncPageable);
 
         // Act
         var result = await _service.ResolveResourceIdAsync(subscription, null, resourceType, resourceName);
@@ -222,7 +222,7 @@ public class ResourceResolverServiceTests
 
     #endregion
 
-        #region Helper Methods
+    #region Helper Methods
 
     private static GenericResource CreateMockGenericResource(string resourceId, string resourceGroupName, string resourceType, string resourceName)
     {

@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Text.Json;
 using AzureMcp.Areas.Monitor.Commands.Metrics;
 using AzureMcp.Areas.Monitor.Models;
 using AzureMcp.Areas.Monitor.Services;
@@ -9,9 +12,6 @@ using AzureMcp.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Text.Json;
 using Xunit;
 
 namespace AzureMcp.Tests.Areas.Monitor.UnitTests.Metrics;

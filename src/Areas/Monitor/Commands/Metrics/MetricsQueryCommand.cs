@@ -14,12 +14,12 @@ namespace AzureMcp.Areas.Monitor.Commands.Metrics;
 /// <summary>
 /// Command for querying Azure Monitor metrics
 /// </summary>
-public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger) 
+public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
     : BaseMetricsCommand<MetricsQueryOptions>
 {
     private const string CommandTitle = "Query Azure Monitor Metrics";
     private readonly ILogger<MetricsQueryCommand> _logger = logger;
-    
+
     // Define options from OptionDefinitions
     private readonly Option<string> _metricNamesOption = MonitorOptionDefinitions.Metrics.MetricNames;
     private readonly Option<string> _startTimeOption = MonitorOptionDefinitions.Metrics.StartTime;
@@ -64,7 +64,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
         command.AddOption(_metricNamespaceOption);
         command.AddOption(_maxBucketsOption);
     }
-    
+
     protected override MetricsQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
@@ -125,7 +125,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
 
             // Get the metrics service from DI
             var service = context.GetService<IMonitorMetricsService>();
-            
+
             // Call the metrics service method directly
             var results = await service.QueryMetricsAsync(
                 options.Subscription!,
@@ -146,7 +146,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
             if (results?.Count > 0)
             {
                 int maxBuckets = options.MaxBuckets ?? 50; // Use provided value or default to 50
-                
+
                 foreach (var metric in results)
                 {
                     foreach (var timeSeries in metric.TimeSeries)
@@ -160,9 +160,9 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
                             timeSeries.TotalBuckets?.Length ?? 0,
                             timeSeries.CountBuckets?.Length ?? 0
                         };
-                        
+
                         int maxBucketCount = bucketCounts.Max();
-                        
+
                         if (maxBucketCount > maxBuckets)
                         {
                             string errorMessage = $"Time series for metric '{metric.Name}' contains {maxBucketCount} time buckets, " +
@@ -170,13 +170,13 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
                                                  $"To resolve this issue, either query a smaller time range, " +
                                                  $"increase the interval size (e.g., use PT1H instead of PT5M), " +
                                                  $"or increase the --max-buckets parameter.";
-                            
+
                             context.Response.Status = 400;
                             context.Response.Message = errorMessage;
-                            
+
                             _logger.LogWarning("Bucket limit exceeded. Metric: {MetricName}, BucketCount: {BucketCount}, MaxBuckets: {MaxBuckets}",
                                 metric.Name, maxBucketCount, maxBuckets);
-                            
+
                             return context.Response;
                         }
                     }
@@ -184,16 +184,16 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
             }
 
             // Set results
-            context.Response.Results = results?.Count > 0 ? 
+            context.Response.Results = results?.Count > 0 ?
                 ResponseResult.Create(
                     new MetricsQueryCommandResult(results),
-                    MonitorJsonContext.Default.MetricsQueryCommandResult) : 
+                    MonitorJsonContext.Default.MetricsQueryCommandResult) :
                 null;
         }
         catch (Exception ex)
         {            // Log error with all relevant context
-            _logger.LogError(ex, 
-                "Error querying metrics. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNames: {@MetricNames}, Options: {@Options}", 
+            _logger.LogError(ex,
+                "Error querying metrics. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, MetricNames: {@MetricNames}, Options: {@Options}",
                 options.ResourceGroup, options.ResourceType, options.ResourceName, options.MetricNames, options);
             HandleException(context.Response, ex);
         }

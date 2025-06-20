@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Text.Json;
 using AzureMcp.Areas.Monitor.Commands.Metrics;
 using AzureMcp.Areas.Monitor.Models;
 using AzureMcp.Areas.Monitor.Services;
@@ -10,9 +13,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Text.Json;
 using Xunit;
 
 namespace AzureMcp.Tests.Areas.Monitor.UnitTests.Metrics;
@@ -28,11 +28,11 @@ public class MetricsNamespacesCommandTests
     {
         _service = Substitute.For<IMonitorMetricsService>();
         _logger = Substitute.For<ILogger<MetricsNamespacesCommand>>();
-        
+
         var collection = new ServiceCollection();
         collection.AddSingleton(_service);
         _serviceProvider = collection.BuildServiceProvider();
-        
+
         _command = new(_logger);
     }
 
@@ -62,16 +62,16 @@ public class MetricsNamespacesCommandTests
 
         // Assert
         var optionNames = command.Options.Select(o => o.Name).ToList();
-        
+
         // Check for required base options
         Assert.Contains("subscription", optionNames);
         Assert.Contains("resource-name", optionNames);
-        
+
         // Check for optional base options
         Assert.Contains("resource-group", optionNames);
         Assert.Contains("resource-type", optionNames);
         Assert.Contains("tenant", optionNames);
-        
+
         // Check for command-specific options
         Assert.Contains("limit", optionNames);
         Assert.Contains("search-string", optionNames);
@@ -109,10 +109,10 @@ public class MetricsNamespacesCommandTests
         // Assert
         Assert.Equal(200, response.Status);
         Assert.NotNull(response.Results);
-        
+
         var resultJson = JsonSerializer.Serialize(response.Results);
         var resultData = JsonSerializer.Deserialize<JsonElement>(resultJson);
-        
+
         Assert.True(resultData.TryGetProperty("results", out var resultsArray));
         Assert.Equal(expectedLimit, resultsArray.GetArrayLength());
     }
@@ -254,14 +254,14 @@ public class MetricsNamespacesCommandTests
         // Assert
         Assert.Equal(200, response.Status);
         Assert.NotNull(response.Results);
-        
+
         // Verify the response structure
         var resultJson = JsonSerializer.Serialize(response.Results);
         var resultData = JsonSerializer.Deserialize<JsonElement>(resultJson);
-        
+
         Assert.True(resultData.TryGetProperty("results", out var resultsArray));
         Assert.Equal(3, resultsArray.GetArrayLength());
-        
+
         Assert.True(resultData.TryGetProperty("status", out var statusElement));
         Assert.Contains("All 3 metric namespaces returned", statusElement.GetString());
     }
@@ -290,13 +290,13 @@ public class MetricsNamespacesCommandTests
         // Assert
         Assert.Equal(200, response.Status);
         Assert.NotNull(response.Results);
-        
+
         var resultJson = JsonSerializer.Serialize(response.Results);
         var resultData = JsonSerializer.Deserialize<JsonElement>(resultJson);
-        
+
         Assert.True(resultData.TryGetProperty("results", out var resultsArray));
         Assert.Equal(5, resultsArray.GetArrayLength());
-        
+
         Assert.True(resultData.TryGetProperty("status", out var statusElement));
         Assert.Contains("Results truncated to 5 of 15", statusElement.GetString());
     }
@@ -324,10 +324,10 @@ public class MetricsNamespacesCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        
+
         var resultJson = JsonSerializer.Serialize(response.Results);
         var resultData = JsonSerializer.Deserialize<JsonElement>(resultJson);
-        
+
         Assert.True(resultData.TryGetProperty("status", out var statusElement));
         var statusMessage = statusElement.GetString();
         Assert.Contains("Results truncated to 10 of 20", statusMessage);
@@ -541,11 +541,11 @@ public class MetricsNamespacesCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        
+
         // When limit is 0 or negative, Take() should return empty results
         var resultJson = JsonSerializer.Serialize(response.Results);
         var resultData = JsonSerializer.Deserialize<JsonElement>(resultJson);
-        
+
         Assert.True(resultData.TryGetProperty("results", out var resultsArray));
         Assert.Equal(0, resultsArray.GetArrayLength());
     }
@@ -573,13 +573,13 @@ public class MetricsNamespacesCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        
+
         var resultJson = JsonSerializer.Serialize(response.Results);
         var resultData = JsonSerializer.Deserialize<JsonElement>(resultJson);
-        
+
         Assert.True(resultData.TryGetProperty("results", out var resultsArray));
         Assert.Equal(10, resultsArray.GetArrayLength());
-        
+
         Assert.True(resultData.TryGetProperty("status", out var statusElement));
         Assert.Contains("All 10 metric namespaces returned", statusElement.GetString());
         Assert.DoesNotContain("truncated", statusElement.GetString());

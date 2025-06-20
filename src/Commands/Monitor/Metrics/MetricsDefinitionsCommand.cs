@@ -1,27 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AzureMcp.Areas.Monitor.Models;
-using AzureMcp.Areas.Monitor.Options;
-using AzureMcp.Areas.Monitor.Options.Metrics;
-using AzureMcp.Areas.Monitor.Services;
-using AzureMcp.Commands.Monitor;
+using AzureMcp.Models;
+using AzureMcp.Models.Monitor.Metrics;
+using AzureMcp.Models.Option;
+using AzureMcp.Options.Monitor.Metrics;
+using AzureMcp.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace AzureMcp.Areas.Monitor.Commands.Metrics;
+namespace AzureMcp.Commands.Monitor.Metrics;
 
 /// <summary>
 /// Command for listing Azure Monitor metric definitions
 /// </summary>
-public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand> logger)
-    : BaseMetricsCommand<MetricsDefinitionsOptions>
+public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand> logger) : BaseMetricsCommand<MetricsDefinitionsOptions>
 {
     private const string CommandTitle = "List Azure Monitor Metric Definitions";
     private readonly ILogger<MetricsDefinitionsCommand> _logger = logger;
 
-    private readonly Option<string> _metricNamespaceOption = MonitorOptionDefinitions.Metrics.MetricNamespace;
-    private readonly Option<string> _searchStringOption = MonitorOptionDefinitions.Metrics.SearchString;
-    private readonly Option<int> _limitOption = MonitorOptionDefinitions.Metrics.DefinitionsLimit;
+    private readonly Option<string> _metricNamespaceOption = OptionDefinitions.Monitor.MetricNamespace;
+    private readonly Option<string> _searchStringOption = OptionDefinitions.Monitor.SearchString;
+    private readonly Option<int> _limitOption = OptionDefinitions.Monitor.DefinitionsLimit;
 
     public override string Name => "definitions";
 
@@ -31,7 +30,7 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
         Required options:
         - {_resourceNameOption.Name}: {_resourceNameOption.Description}
         Optional options:
-        - {_optionalResourceGroupOption.Name}: {_optionalResourceGroupOption.Description}
+        - {_resourceGroupOption.Name}: {_resourceGroupOption.Description}
         - {_resourceTypeOption.Name}: {_resourceTypeOption.Description}
         - {_metricNamespaceOption.Name}: {_metricNamespaceOption.Description}
         - {_searchStringOption.Name}: {_searchStringOption.Description}

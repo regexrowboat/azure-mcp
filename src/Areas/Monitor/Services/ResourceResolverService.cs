@@ -24,10 +24,10 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
     {
         ValidateRequiredParameters(subscription, resourceName);
 
-        if (ResourceIdentifier.TryParse(resourceName, out ResourceIdentifier? result) && result != null)
+        if (ResourceIdentifier.TryParse(resourceName, out ResourceIdentifier? result))
         {
             // If already a valid ResourceIdentifier, return it directly
-            return result;
+            return result!;
         }
 
         // If both resourceGroup and resourceType are provided, build direct path
@@ -55,14 +55,14 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
         // Filter by resource group if provided
         if (!string.IsNullOrEmpty(resourceGroup))
         {
-            filteredResources = filteredResources.Where(r => 
+            filteredResources = filteredResources.Where(r =>
                 r.Data.Id?.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true);
         }
 
         // Filter by resource type if provided
         if (!string.IsNullOrEmpty(resourceType))
         {
-            filteredResources = filteredResources.Where(r => 
+            filteredResources = filteredResources.Where(r =>
                 r.Data.ResourceType.ToString().Equals(resourceType, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -76,7 +76,7 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
 
         if (finalResources.Count > 1)
         {
-            var resourceDetails = finalResources.Select(r => 
+            var resourceDetails = finalResources.Select(r =>
                 $"- {r.Data.Id} (Resource Group: {r.Data.Id?.ResourceGroupName}, Type: {r.Data.ResourceType})")
                 .ToList();
 
@@ -86,17 +86,17 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
                                string.Join("\n", resourceDetails));
         }
 
-        return finalResources[0].Data.Id ?? 
+        return finalResources[0].Data.Id ??
                throw new Exception($"Unable to get resource ID for '{resourceName}'");
     }
 
     private static string BuildFilterDescription(string? resourceGroup, string? resourceType)
     {
         var filters = new List<string>();
-        
+
         if (!string.IsNullOrEmpty(resourceGroup))
             filters.Add($"resource group '{resourceGroup}'");
-            
+
         if (!string.IsNullOrEmpty(resourceType))
             filters.Add($"resource type '{resourceType}'");
 

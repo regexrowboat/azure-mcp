@@ -13,12 +13,12 @@ namespace AzureMcp.Areas.Monitor.Commands.Metrics;
 /// <summary>
 /// Command for listing Azure Monitor metric namespaces
 /// </summary>
-public sealed class MetricsNamespacesCommand(ILogger<MetricsNamespacesCommand> logger) 
+public sealed class MetricsNamespacesCommand(ILogger<MetricsNamespacesCommand> logger)
     : BaseMetricsCommand<MetricsNamespacesOptions>
 {
     private const string CommandTitle = "List Azure Monitor Metric Namespaces";
     private readonly ILogger<MetricsNamespacesCommand> _logger = logger;
-    
+
     private readonly Option<int> _limitOption = MonitorOptionDefinitions.Metrics.NamespacesLimit;
     private readonly Option<string> _searchStringOption = MonitorOptionDefinitions.Metrics.SearchString;
 
@@ -44,7 +44,7 @@ public sealed class MetricsNamespacesCommand(ILogger<MetricsNamespacesCommand> l
         command.AddOption(_limitOption);
         command.AddOption(_searchStringOption);
     }
-    
+
     protected override MetricsNamespacesOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
@@ -71,7 +71,7 @@ public sealed class MetricsNamespacesCommand(ILogger<MetricsNamespacesCommand> l
 
             // Get the metrics service from DI
             var service = context.GetService<IMonitorMetricsService>();
-              // Call service operation with required parameters
+            // Call service operation with required parameters
             var allResults = await service.ListMetricNamespacesAsync(
                 options.Subscription!,
                 options.ResourceGroup,
@@ -110,8 +110,8 @@ public sealed class MetricsNamespacesCommand(ILogger<MetricsNamespacesCommand> l
         }
         catch (Exception ex)
         {            // Log error with all relevant context
-            _logger.LogError(ex, 
-                "Error listing metric namespaces. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, Options: {@Options}", 
+            _logger.LogError(ex,
+                "Error listing metric namespaces. ResourceGroup: {ResourceGroup}, ResourceType: {ResourceType}, ResourceName: {ResourceName}, Options: {@Options}",
                 options.ResourceGroup, options.ResourceType, options.ResourceName, options);
             HandleException(context.Response, ex);
         }

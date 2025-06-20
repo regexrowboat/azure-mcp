@@ -3,13 +3,13 @@
 
 using Azure.Monitor.Query;
 using Azure.Monitor.Query.Models;
+using AzureMcp.Areas.Monitor.Models;
+using AzureMcp.Helpers;
 using AzureMcp.Options;
+using AzureMcp.Services.Azure;
 using MetricDefinition = AzureMcp.Areas.Monitor.Models.MetricDefinition;
 using MetricNamespace = AzureMcp.Areas.Monitor.Models.MetricNamespace;
 using MetricResult = AzureMcp.Areas.Monitor.Models.MetricResult;
-using AzureMcp.Helpers;
-using AzureMcp.Services.Azure;
-using AzureMcp.Areas.Monitor.Models;
 
 namespace AzureMcp.Areas.Monitor.Services;
 
@@ -62,7 +62,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
 
             // Build query options
             var queryOptions = new MetricsQueryOptions();
-            
+
             if (startTimeOffset.HasValue && endTimeOffset.HasValue)
             {
                 queryOptions.TimeRange = new QueryTimeRange(startTimeOffset.Value, endTimeOffset.Value);
@@ -134,7 +134,8 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
 
                 foreach (var timeSeries in metric.TimeSeries)
                 {
-                    if (timeSeries.Values.Count == 0) continue;
+                    if (timeSeries.Values.Count == 0)
+                        continue;
 
                     var compactTimeSeries = new MetricTimeSeries
                     {
