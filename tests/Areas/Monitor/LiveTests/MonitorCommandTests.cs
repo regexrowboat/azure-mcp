@@ -271,6 +271,21 @@ public class MonitorCommandTests(LiveTestFixture fixture, ITestOutputHelper outp
     }
 
     [Fact]
+    public async Task app_time_correlation()
+    {
+        var result = await CallToolAsync(
+            "azmcp-monitor-app-diagnose-time",
+            new()
+            {
+                {  "subscription", "4e960cbd-a6b8-49db-98ca-7d3fa323a005" },
+                { "resource-group", "cds.int.monitoring" },
+                { "resource-name", "cdsfe-int-servicetelemetry-ai" },
+                { "symptom", "Correlate failing requests with exceptions by type using Application Insights time correlation analysis." },
+                { "data-sets", "[{\"table\": \"requests\", \"filters\": \"success=false\", \"splitBy\": \"resultCode\"}, {\"table\": \"exceptions\", \"splitBy\": \"type\"}]" }
+            });
+    }
+
+    [Fact]
     [Trait("Category", "Live")]
     public async Task Should_list_metric_definitions()
     {
