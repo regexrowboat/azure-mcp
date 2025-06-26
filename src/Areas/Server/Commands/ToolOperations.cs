@@ -101,7 +101,7 @@ public class ToolOperations
                 IsError = true,
             };
         }
-        var commandContext = new CommandContext(_serviceProvider);
+        var commandContext = new CommandContext(_serviceProvider, parameters.Server);
 
         var realCommand = command.GetCommand();
         var commandOptions = realCommand.ParseFromDictionary(parameters.Params.Arguments);
