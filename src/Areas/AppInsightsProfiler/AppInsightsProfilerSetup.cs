@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AzureMcp.Areas.AppInsightsProfiler;
 
-public class MonitorSetup : IAreaSetup
+public class AppInsightsProfilerSetup : IAreaSetup
 {
     public void ConfigureServices(IServiceCollection services)
     {
