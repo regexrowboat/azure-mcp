@@ -36,7 +36,7 @@ public class ListInsightsCommand : AppInsightsProfilerBaseCommand
             context.Activity?.WithSubscriptionTag(options);
 
             IAppInsightsProfilerDataplaneService dataplane = context.GetService<IAppInsightsProfilerDataplaneService>();
-            var insights = await dataplane.GetInsightsAsync(options.AppIds, options.StartDateTimeUtc, options.EndDateTimeUtc, cancellationToken: default).ConfigureAwait(false);
+            var insights = await dataplane.GetInsightsAsync([options.AppId], options.StartDateTimeUtc, options.EndDateTimeUtc, cancellationToken: default).ConfigureAwait(false);
 
             context.Response.Results = insights?.Count > 0 ?
                 ResponseResult.Create(

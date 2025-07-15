@@ -12,13 +12,12 @@ public class AppInsightsProfilerOptions : SubscriptionOptions
     /// <summary>
     /// Gets or sets the app ids of the application insights components.
     /// </summary>
-    public List<Guid> AppIds { get; set; } = [];
+    public Guid AppId { get; set; }
 
     /// <summary>
     /// Gets or sets the start date time for the insights query.
     /// Defaults to 24 hours ago.
     /// </summary>
-    /// <returns></returns>
     public DateTime StartDateTimeUtc { get; set; } = DateTime.UtcNow.AddDays(-1);
 
     /// <summary>
