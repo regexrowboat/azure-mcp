@@ -1,12 +1,10 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
 using AzureMcp.Areas.AppInsightsProfiler.Models;
 using AzureMcp.Commands.AppInsightsProfiler;
 using AzureMcp.Services.Azure;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace AzureMcp.Areas.AppInsightsProfiler.Services;
@@ -19,17 +17,15 @@ internal sealed class AppInsightsProfilerDataplaneService : BaseAzureService, IA
     private readonly ILogger _logger;
     private readonly HttpClient _httpClient;
 
-    public AppInsightsProfilerDataplaneService(
-        IHttpClientFactory httpClientFactory,
-        ILogger<AppInsightsProfilerDataplaneService> logger)
+    public AppInsightsProfilerDataplaneService(ILogger<AppInsightsProfilerDataplaneService> logger)
     {
-        _httpClient = CreateHttpClient(httpClientFactory);
+        _httpClient = CreateHttpClient();
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    private HttpClient CreateHttpClient(IHttpClientFactory httpClientFactory)
+    private HttpClient CreateHttpClient()
     {
-        HttpClient client = httpClientFactory.CreateClient("AppInsightsProfilerDataplane");
+        HttpClient client = new();
         client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
         client.BaseAddress = new Uri(BaseUrl);
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
