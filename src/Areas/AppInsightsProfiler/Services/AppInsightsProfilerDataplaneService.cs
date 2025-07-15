@@ -46,7 +46,7 @@ internal sealed class AppInsightsProfilerDataplaneService : BaseAzureService, IA
         };
 
         JsonContent appsPostBody = JsonContent.Create(bulkAppsPostBody, AppInsightsProfilerJsonContext.Default.BulkAppsPostBody, mediaType: MediaTypeHeaderValue.Parse("application/json"));
-        HttpResponseMessage response = await dataplaneClient.PostAsync("api/apps/bulk/insights/rollups", appsPostBody, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage response = await dataplaneClient.PostAsync($"api/apps/bulk/insights/rollups?startTime={startDateTimeUtc:o}&endTime={endDateTimeUtc:o}&api-version=2025-01-07-preview", appsPostBody, cancellationToken).ConfigureAwait(false);
 
         List<JsonNode>? result = await JsonSerializer.DeserializeAsync<List<JsonNode>>(
             await response.Content.ReadAsStreamAsync().ConfigureAwait(false),
