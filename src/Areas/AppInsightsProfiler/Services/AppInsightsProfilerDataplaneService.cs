@@ -11,7 +11,7 @@ namespace AzureMcp.Areas.AppInsightsProfiler.Services;
 
 internal sealed class AppInsightsProfilerDataplaneService : BaseAzureService, IAppInsightsProfilerDataplaneService, IDisposable
 {
-    private const string MonitorScope = "https://monitor.azure.com//.default";
+    private const string MonitorScope = "api://dataplane.diagnosticservices.azure.com/.default";
     private const string BaseUrl = "https://dataplane.diagnosticservices.azure.com/";
 
     private readonly ILogger _logger;
