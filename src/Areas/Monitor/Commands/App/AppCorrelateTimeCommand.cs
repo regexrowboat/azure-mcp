@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
 using AzureMcp.Areas.Monitor.Models;
 using AzureMcp.Areas.Monitor.Options;
 using AzureMcp.Areas.Monitor.Options.App;
@@ -30,13 +29,39 @@ public sealed class AppCorrelateTimeCommand(ILogger<AppCorrelateTimeCommand> log
         Example data sets:
 
         Determine which result code is contributing to the symptom:
-        --data-sets: table:requests;filters:success=false;splitBy:resultCode
+        [
+            {
+                "table": "requests",
+                "filters": "success=false",
+                "splitBy": "resultCode"
+            }
+        ]
 
         Determine whether a specific exception is contributing to 500 errors:
-        --data-sets: table:requests;filters:resultCode="500" table:exceptions;filters:type="System.InvalidOperationException"
+        [
+            {
+                "table": "requests",
+                "filters": "resultCode=\"500\""
+            },
+            {
+                "table": "exceptions",
+                "filters": "type=\"System.InvalidOperationException\""
+            }
+        ]
 
         Determine which operation name is contributing to slow performance:
-        --data-sets: table:requests;splitBy:operation_Name;aggregation:Average table:requests;splitBy:operation_Name;aggregation:95thPercentile
+        [
+            {
+                "table": "requests",
+                "splitBy": "operation_Name",
+                "aggregation": "Average"
+            },
+            {
+                "table": "requests",
+                "splitBy": "operation_Name",
+                "aggregation": "95thPercentile"
+            }
+        ]
 
         Use this tool for investigating issues with Application Insights resources.
         Required options:

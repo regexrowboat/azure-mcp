@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using AzureMcp.Areas.Monitor.Models;
+using AzureMcp.Commands.Monitor;
 using AzureMcp.Models.Option;
 
 namespace AzureMcp.Areas.Monitor.Options;
@@ -129,93 +130,40 @@ public static class MonitorOptionDefinitions
             $"--{CorrelationDataSetName}",
             (ArgumentResult result) =>
             {
-                var tokens = result.Tokens.Select(t => t.Value)
-                    .Select(s => s.Split("table:", StringSplitOptions.RemoveEmptyEntries).Select(t => "table:" + t)).SelectMany(t => t)
-                .Select(t => t.Split(';', StringSplitOptions.RemoveEmptyEntries)).SelectMany(t => t).ToList();
-                List<AppCorrelateDataSet> toReturn = new();
-                string? table = null;
-                string? filters = null;
-                string? splitBy = null;
-                string? aggregation = null;
-                foreach (string currentToken in tokens)
+                if (result.Tokens.Count == 0)
                 {
-                    if (currentToken == null)
+                    return new AppCorrelateDataSetParseResult()
                     {
-                        continue;
-                    }
-                    var splitPart = currentToken.Split(':', 2);
-
-                    if (splitPart.Length != 2)
-                    {
-                        return new AppCorrelateDataSetParseResult()
-                        {
-                            IsValid = false,
-                            ErrorMessage = $"Invalid format for the {CorrelationDataSetName} option. Each data set should be formatted as table:\"TableName\";filters:\"Dimension=Value,...\";splitBy:\"DimensionName\";aggregation:\"AggregationMethod\"."
-                        };
-                    }
-
-                    var key = splitPart[0].Trim().ToLowerInvariant();
-                    var value = splitPart[1].Trim();
-                    if (key == "table")
-                    {
-                        if (table != null)
-                        {
-                            // add a new entry
-                            var dataSet = new AppCorrelateDataSet
-                            {
-                                Table = table!,
-                                Filters = filters ?? string.Empty,
-                                SplitBy = splitBy ?? string.Empty,
-                                Aggregation = aggregation ?? "Count"
-                            };
-                            toReturn.Add(dataSet);
-                        }
-                        table = value;
-                        filters = null;
-                        splitBy = null;
-                        aggregation = null;
-                    }
-
-                    switch (key)
-                    {
-                        case "filters":
-                            filters = value;
-                            break;
-                        case "splitby":
-                            splitBy = value;
-                            break;
-                        case "aggregation":
-                            aggregation = value;
-                            break;
-                    }
-                }
-
-                if (table != null)
-                {
-                    // add a new entry
-                    var dataSet = new AppCorrelateDataSet
-                    {
-                        Table = table!,
-                        Filters = filters ?? string.Empty,
-                        SplitBy = splitBy ?? string.Empty,
-                        Aggregation = aggregation ?? "Count"
+                        IsValid = false,
+                        ErrorMessage = $"The {CorrelationDataSetName} option is required and must contain at least one data set."
                     };
-                    toReturn.Add(dataSet);
                 }
 
-                return new AppCorrelateDataSetParseResult
+                try
                 {
-                    DataSets = toReturn,
-                    IsValid = true
-                };
+                    var dataSets = JsonSerializer.Deserialize(result.Tokens[0].Value, MonitorJsonContext.Default.ListAppCorrelateDataSet);
+
+                    return new AppCorrelateDataSetParseResult()
+                    {
+                        IsValid = true,
+                        DataSets = dataSets ?? new List<AppCorrelateDataSet>()
+                    };
+                }
+                catch (JsonException ex)
+                {
+                    return new AppCorrelateDataSetParseResult()
+                    {
+                        IsValid = false,
+                        ErrorMessage = $"Invalid JSON format for the {CorrelationDataSetName} option. Error: {ex.Message}"
+                    };
+                }
             },
             isDefault: false,
-            "The data sets to include in the correlation analysis. This is a list of one or more strings formatted as follows (each string represents a data set to compare): table:\"The name of the table to perform correlation analysis on. Should be a valid Application Insights table name\";filters:\"A comma-separated list of 'dimension=value'. Dimension names should be valid Application Insights column names\";splitBy:\"A single dimension to split by, or null (if data set should not be split). This should be a valid Application Insights column name.\";aggregation:\"The aggregation method to use. Default is 'Count'. Valid values are 'Count', 'Average' and '95thPercentile'.\""
+            "The data sets to include in the correlation analysis. This is a JSON array with one or more data sets to compare, formatted as follows:" +
+            "[{\"table\":\"The name of the table to perform correlation analysis on. Should be a valid Application Insights table name\",\"filters\":\"A comma-separated list of 'dimension=value'. Dimension names should be valid Application Insights column names\",\"splitBy\":\"A single dimension to split by, or null (if data set should not be split). This should be a valid Application Insights column name.\",\"aggregation\":\"The aggregation method to use. Default is 'Count'. Valid values are 'Count', 'Average' and '95thPercentile'.\"}]"
         )
         {
-            IsRequired = true,
-            AllowMultipleArgumentsPerToken = true,
-            Arity = ArgumentArity.OneOrMore
+            IsRequired = true
         };
     }
     public const string TableNameName = "table-name";
