@@ -113,18 +113,11 @@ namespace AzureMcp.Areas.Monitor.Commands.App
                     options.Tenant,
                     options.RetryPolicy);
 
-                var results = result != null ? new AppGetSpanCommandResult(result, null) : null;
-
-                string? summary = null;
-                if (results != null)
-                {
-                    summary = await service.SummarizeWithSampling(context.Server, options.Intent!, results, MonitorJsonContext.Default.AppGetSpanCommandResult, CancellationToken.None);
-                }
+                var results = result != null ? new AppGetSpanCommandResult(result) : null;
 
                 context.Response.Results = results != null ?
                     ResponseResult.Create(
-                        summary != null ?
-                            new AppGetSpanCommandResult(null, summary) : results,
+                        results,
                         MonitorJsonContext.Default.AppGetSpanCommandResult) : null;
             }
             catch (Exception ex)
@@ -139,10 +132,6 @@ namespace AzureMcp.Areas.Monitor.Commands.App
             return context.Response;
         }
 
-        public record AppGetSpanCommandResult(
-            [property: JsonPropertyName("result"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-            SpanDetails[]? Result,
-            [property: JsonPropertyName("summary"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-            string? Summary);
+        public record AppGetSpanCommandResult(SpanDetails[]? Result);
     }
 }

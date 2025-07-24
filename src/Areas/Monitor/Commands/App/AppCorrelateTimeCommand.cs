@@ -140,19 +140,9 @@ public sealed class AppCorrelateTimeCommand(ILogger<AppCorrelateTimeCommand> log
                 options.Tenant,
                 options.RetryPolicy);
 
-            var results = result?.Length > 0 ? new AppCorrelateCommandResult(result, null) : null;
-
-            string? summary = null;
-            if (results != null)
-            {
-                summary = await service.SummarizeWithSampling(context.Server, options.Intent!, results, MonitorJsonContext.Default.AppCorrelateCommandResult, CancellationToken.None);
-            }
-
-            context.Response.Results =  result?.Length > 0 ?
+            context.Response.Results = result?.Length > 0 ?
                 ResponseResult.Create(
-                    summary != null ?
-                        new AppCorrelateCommandResult(null, summary) :
-                        new AppCorrelateCommandResult(result, null),
+                    new AppCorrelateCommandResult(result),
                     MonitorJsonContext.Default.AppCorrelateCommandResult) :
                 null;
         }
@@ -168,10 +158,5 @@ public sealed class AppCorrelateTimeCommand(ILogger<AppCorrelateTimeCommand> log
         return context.Response;
     }
 
-    internal record AppCorrelateCommandResult(
-        [property: JsonPropertyName("result"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        AppCorrelateTimeResult[]? Result,
-        [property: JsonPropertyName("summary"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        string? Summary
-    );
+    internal record AppCorrelateCommandResult(AppCorrelateTimeResult[]? Result);
 }

@@ -1,7 +1,5 @@
 ﻿using System.Data;
 using System.Text;
-using System.Text.Json.Serialization.Metadata;
-using System.Threading;
 using Azure;
 using Azure.Core;
 using Azure.Monitor.Query;
@@ -12,7 +10,6 @@ using AzureMcp.Commands.Monitor;
 using AzureMcp.Options;
 using AzureMcp.Services.Azure;
 using Microsoft.Extensions.Logging;
-using ModelContextProtocol.Protocol;
 
 namespace AzureMcp.Areas.Monitor.Services
 {
@@ -21,41 +18,6 @@ namespace AzureMcp.Areas.Monitor.Services
         private readonly ILogger<AppDiagnoseService> _logger = logger;
         private readonly IResourceResolverService _resourceResolverService = resourceResolverService;
         private static readonly StandardFields _standardFields = new StandardFields();
-
-        public async Task<string?> SummarizeWithSampling<T>(IMcpServer? mcpServer, string intent, T data, JsonTypeInfo<T> typeInfo, CancellationToken cancellationToken)
-        {
-            if (mcpServer?.ClientCapabilities?.Sampling == null)
-            {
-                return null;
-            }
-
-            var samplingRequest = new CreateMessageRequestParams
-            {
-                Messages = [
-                new SamplingMessage
-                {
-                    Role = Role.Assistant,
-                    Content = new TextContentBlock {
-                        Text = $"""
-                            You are a "sub-agent" in a telemetry investigation workflow for Application Insights. Your job is to extract relevant details that help the "main agent" (caller) perform a root cause analysis. The "main agent" will express its intent to you.
-
-                            Summarize the following data and extract the key information based on the "main agent" intent:
-                            {intent}
-
-                            Rules:
-                            1. Always describe the evidence you based your conclusions on.
-                            2. Always extract any IDs and time ranges the main agent would need to investigate further or drill into details.
-
-                            {JsonSerializer.Serialize(data, typeInfo)}
-                            """
-                    }
-                }
-            ],
-            };
-
-            var samplingResponse = await mcpServer.SampleAsync(samplingRequest, cancellationToken);
-            return (samplingResponse.Content as TextContentBlock)?.Text?.Trim();
-        }
 
         public async Task<DistributedTraceResult> GetDistributedTrace(string subscription, string? resourceGroup, string? resourceName, string? resourceId, string traceId, string? spanId, DateTime startTime, DateTime endTime, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
         {

@@ -145,20 +145,8 @@ public sealed class AppImpactCommand(ILogger<AppImpactCommand> logger)
                 options.Tenant,
                 options.RetryPolicy);
 
-            var results = result?.Count > 0 ? new AppImpactCommandResult(result, null) : null;
-
-            string? summary = null;
-            if (results != null)
-            {
-                summary = await service.SummarizeWithSampling(context.Server, options.Intent!, results, MonitorJsonContext.Default.AppImpactCommandResult, CancellationToken.None);
-            }
-
             context.Response.Results = result?.Count > 0 ?
-                ResponseResult.Create(
-                    summary != null ?
-                        new AppImpactCommandResult(null, summary) :
-                        new AppImpactCommandResult(result, null),
-                    MonitorJsonContext.Default.AppImpactCommandResult) :
+                ResponseResult.Create(new AppImpactCommandResult(result), MonitorJsonContext.Default.AppImpactCommandResult) :
                 null;
         }
         catch (Exception ex)
@@ -172,9 +160,5 @@ public sealed class AppImpactCommand(ILogger<AppImpactCommand> logger)
 
         return context.Response;
     }
-    public record AppImpactCommandResult(
-        [property: JsonPropertyName("result"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        List<AppImpactResult>? Result,
-        [property: JsonPropertyName("summary"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        string? Summary);
+    public record AppImpactCommandResult(List<AppImpactResult>? Result);
 }

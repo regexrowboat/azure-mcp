@@ -102,7 +102,7 @@ public sealed class CommandFactoryToolLoader(
                 IsError = true,
             };
         }
-        var commandContext = new CommandContext(_serviceProvider, mcpServer: request.Server);
+        var commandContext = new CommandContext(_serviceProvider);
 
         var realCommand = command.GetCommand();
         var commandOptions = realCommand.ParseFromDictionary(request.Params.Arguments);

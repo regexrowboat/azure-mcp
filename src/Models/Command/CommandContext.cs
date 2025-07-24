@@ -21,8 +21,6 @@ public class CommandContext
     /// </summary>
     public CommandResponse Response { get; }
 
-    public IMcpServer? Server { get; } = null;
-
     /// <summary>
     /// Current telemetry context if there is one available.
     /// </summary>
@@ -32,7 +30,7 @@ public class CommandContext
     /// Creates a new command context
     /// </summary>
     /// <param name="serviceProvider">The service provider for dependency injection</param>
-    public CommandContext(IServiceProvider serviceProvider, Activity? activity = default, IMcpServer? mcpServer = null)
+    public CommandContext(IServiceProvider serviceProvider, Activity? activity = default)
     {
         _serviceProvider = serviceProvider;
         Activity = activity;

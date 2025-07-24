@@ -118,19 +118,8 @@ public sealed class AppGetTraceCommand(ILogger<AppGetTraceCommand> logger)
                 options.Tenant,
                 options.RetryPolicy);
 
-            var results = result != null ? new AppGetTraceCommandResult(result, null) : null;
-
-            string? summary = null;
-            if (results != null)
-            {
-                summary = await service.SummarizeWithSampling(context.Server, options.Intent!, results, MonitorJsonContext.Default.AppGetTraceCommandResult, CancellationToken.None);
-            }
-
-            context.Response.Results = results != null ?
-                ResponseResult.Create(
-                    summary != null ?
-                        new AppGetTraceCommandResult(null, summary) : results,
-                    MonitorJsonContext.Default.AppGetTraceCommandResult) : null;
+            context.Response.Results = result != null ?
+                    ResponseResult.Create(new AppGetTraceCommandResult(result), MonitorJsonContext.Default.AppGetTraceCommandResult) : null;
         }
         catch (Exception ex)
         {
@@ -144,9 +133,5 @@ public sealed class AppGetTraceCommand(ILogger<AppGetTraceCommand> logger)
         return context.Response;
     }
 
-    public record AppGetTraceCommandResult(
-        [property: JsonPropertyName("result"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        DistributedTraceResult? Result,
-        [property: JsonPropertyName("summary"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-            string? Summary);
+    public record AppGetTraceCommandResult(DistributedTraceResult? Result);
 }

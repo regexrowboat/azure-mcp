@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization.Metadata;
-using AzureMcp.Areas.Monitor.Models;
+﻿using AzureMcp.Areas.Monitor.Models;
 using AzureMcp.Options;
 
 namespace AzureMcp.Areas.Monitor.Services
@@ -63,7 +62,5 @@ namespace AzureMcp.Areas.Monitor.Services
            DateTime endTime,
            string? tenant = null,
            RetryPolicyOptions? retryPolicy = null);
-
-        Task<string?> SummarizeWithSampling<T>(IMcpServer? mcpServer, string intent, T data, JsonTypeInfo<T> typeInfo, CancellationToken cancellationToken);
     }
 }

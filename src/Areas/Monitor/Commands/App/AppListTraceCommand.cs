@@ -143,19 +143,8 @@ namespace AzureMcp.Areas.Monitor.Commands.App
                     options.Tenant,
                     options.RetryPolicy);
 
-                var results = result != null ? new AppListTraceCommandResult(result, null) : null;
-
-                string? summary = null;
-                if (results != null)
-                {
-                    summary = await service.SummarizeWithSampling(context.Server, options.Intent!, results, MonitorJsonContext.Default.AppListTraceCommandResult, CancellationToken.None);
-                }
-
-                context.Response.Results = results != null ?
-                    ResponseResult.Create(
-                        summary != null ?
-                            new AppListTraceCommandResult(null, summary) : results,
-                        MonitorJsonContext.Default.AppListTraceCommandResult) : null;
+                context.Response.Results = result != null ?
+                    ResponseResult.Create(new AppListTraceCommandResult(result), MonitorJsonContext.Default.AppListTraceCommandResult) : null;
             }
             catch (Exception ex)
             {
@@ -169,10 +158,6 @@ namespace AzureMcp.Areas.Monitor.Commands.App
             return context.Response;
         }
 
-        public record AppListTraceCommandResult(
-            [property: JsonPropertyName("result"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-            AppListTraceResult? Result,
-            [property: JsonPropertyName("summary"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-            string? Summary);
+        public record AppListTraceCommandResult(AppListTraceResult? Result);
     }
 }
