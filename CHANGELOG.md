@@ -65,6 +65,8 @@
 
 ### Other Changes
 
+- Added support for JSON tool parameters
+
 ## 0.4.1 (2025-07-17)
 
 ### Features Added
