@@ -167,7 +167,7 @@ public sealed class AppImpactCommand(ILogger<AppImpactCommand> logger)
             _logger.LogError(ex,
                 "Error in {Name}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ResourceName: {ResourceName}, Options: {@Options}",
                 Name, options.Subscription, options.ResourceGroup, options.ResourceName, options);
-            HandleException(context.Response, ex);
+            HandleException(context, ex);
         }
 
         return context.Response;

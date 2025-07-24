@@ -162,7 +162,7 @@ public sealed class AppCorrelateTimeCommand(ILogger<AppCorrelateTimeCommand> log
             _logger.LogError(ex,
                 "Error in {Name}. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, ResourceName: {ResourceName}, Options: {@Options}",
                 Name, options.Subscription, options.ResourceGroup, options.ResourceName, options);
-            HandleException(context.Response, ex);
+            HandleException(context, ex);
         }
 
         return context.Response;

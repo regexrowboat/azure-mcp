@@ -3,16 +3,24 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AzureMcp.Areas.Monitor.Commands.App;
+using AzureMcp.Areas.Monitor.Models;
+using AzureMcp.Areas.Monitor.Options.App;
 using AzureMcp.Areas.Monitor.Services;
+using AzureMcp.Areas.Server.Commands.Runtime;
+using AzureMcp.Commands;
 using AzureMcp.Models.Command;
 using AzureMcp.Services.Azure.Subscription;
 using AzureMcp.Services.Azure.Tenant;
 using AzureMcp.Services.Caching;
+using AzureMcp.Services.Telemetry;
+using AzureMcp.Tests.Areas.Server.UnitTests;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
 
@@ -20,6 +28,58 @@ namespace AzureMcp.Tests.Areas.Monitor.LiveTests
 {
     public class AppDiagnoseServiceTests
     {
+        [Fact]
+        public async Task AppDiagnoseWithRealMcpServer()
+        {
+            var sc = new ServiceCollection();
+            sc.AddLogging();
+            sc.AddSingleton<IMemoryCache>(sp => new MemoryCache(new MemoryCacheOptions()));
+            sc.AddSingleton<ICacheService, CacheService>();
+            sc.AddSingleton<ITenantService, TenantService>();
+            sc.AddSingleton<ITelemetryService>(Substitute.For<ITelemetryService>());
+            sc.AddSingleton<ISubscriptionService, SubscriptionService>();
+            sc.AddSingleton<IResourceResolverService, ResourceResolverService>();
+            sc.AddSingleton<IAppDiagnoseService, AppDiagnoseService>();
+            sc.AddSingleton(s => CommandFactoryHelpers.CreateCommandFactory(s));
+            sc.AddAzureMcpServer(new AzureMcp.Areas.Server.Options.ServiceStartOptions
+            {
+                Transport = "stdio",
+                Namespace = new[] { "monitor" },
+                Mode = "all",
+                ReadOnly = false
+            });
+
+            var sp = sc.BuildServiceProvider();
+
+            IMcpRuntime runtime = sp.GetRequiredService<IMcpRuntime>();
+
+            IMcpServer server = Substitute.For<IMcpServer>();
+
+            await runtime.CallToolHandler(new ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams>(server)
+            {
+                Params = new ModelContextProtocol.Protocol.CallToolRequestParams
+                {
+                    Name = "monitor_app_correlate_time",
+                    Arguments = new Dictionary<string, JsonElement>
+                    {
+                        { "subscription", JsonSerializer.SerializeToElement("4e960cbd-a6b8-49db-98ca-7d3fa323a005") },
+                        { "resource-name", JsonSerializer.SerializeToElement("cdsfe-int-servicetelemetry-ai") },
+                        { "symptom", JsonSerializer.SerializeToElement("Correlate failing requests with exceptions by type using Application Insights time correlation analysis.") },
+                        { "data-sets", JsonSerializer.SerializeToElement(new List<AppCorrelateDataSet>
+                        {
+                            new AppCorrelateDataSet
+                            {
+                                Table = "requests",
+                                Filters = "success=false",
+                                SplitBy = "resultCode"
+                            }
+                        })
+                        }
+                    }
+                }
+            }, CancellationToken.None);
+        }
+
 
         [Fact]
         public async Task ActualCommand0()
