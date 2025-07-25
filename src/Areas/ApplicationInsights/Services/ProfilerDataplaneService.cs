@@ -2,14 +2,13 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using Azure.Core;
-using AzureMcp.Areas.AppInsightsProfiler.Models;
-using AzureMcp.Commands.AppInsightsProfiler;
+using AzureMcp.Areas.ApplicationInsights.Models;
 using AzureMcp.Services.Azure;
 using Microsoft.Extensions.Logging;
 
-namespace AzureMcp.Areas.AppInsightsProfiler.Services;
+namespace AzureMcp.Areas.ApplicationInsights.Services;
 
-internal sealed class AppInsightsProfilerDataplaneService : BaseAzureService, IAppInsightsProfilerDataplaneService, IDisposable
+internal sealed class ProfilerDataplaneService : BaseAzureService, IProfilerDataplaneService, IDisposable
 {
     private const string MonitorScope = "api://dataplane.diagnosticservices.azure.com/.default";
     private const string BaseUrl = "https://dataplane.diagnosticservices.azure.com/";
@@ -17,7 +16,7 @@ internal sealed class AppInsightsProfilerDataplaneService : BaseAzureService, IA
     private readonly ILogger _logger;
     private readonly HttpClient _httpClient;
 
-    public AppInsightsProfilerDataplaneService(ILogger<AppInsightsProfilerDataplaneService> logger)
+    public ProfilerDataplaneService(ILogger<ProfilerDataplaneService> logger)
     {
         _httpClient = CreateHttpClient();
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -45,12 +44,12 @@ internal sealed class AppInsightsProfilerDataplaneService : BaseAzureService, IA
             Apps = appIds
         };
 
-        JsonContent appsPostBody = JsonContent.Create(bulkAppsPostBody, AppInsightsProfilerJsonContext.Default.BulkAppsPostBody, mediaType: MediaTypeHeaderValue.Parse("application/json"));
+        JsonContent appsPostBody = JsonContent.Create(bulkAppsPostBody, ProfilerJsonContext.Default.BulkAppsPostBody, mediaType: MediaTypeHeaderValue.Parse("application/json"));
         HttpResponseMessage response = await dataplaneClient.PostAsync($"api/apps/bulk/insights/rollups?startTime={startDateTimeUtc:o}&endTime={endDateTimeUtc:o}&api-version=2025-01-07-preview", appsPostBody, cancellationToken).ConfigureAwait(false);
 
-        List<JsonNode>? result = await JsonSerializer.DeserializeAsync<List<JsonNode>>(
+        List<JsonNode>? result = await JsonSerializer.DeserializeAsync(
             await response.Content.ReadAsStreamAsync().ConfigureAwait(false),
-            AppInsightsProfilerJsonContext.Default.ListJsonNode,
+            ProfilerJsonContext.Default.ListJsonNode,
             cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 

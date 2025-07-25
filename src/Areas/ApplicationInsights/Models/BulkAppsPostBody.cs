@@ -1,7 +1,7 @@
-namespace AzureMcp.Areas.AppInsightsProfiler.Models;
+namespace AzureMcp.Areas.ApplicationInsights.Models;
 
 /// <summary>
-/// A contract between the dataplane and the client to post for BulkApps.
+/// A contract between the profiler dataplane and the client to post for BulkApps.
 /// </summary>
 public class BulkAppsPostBody
 {

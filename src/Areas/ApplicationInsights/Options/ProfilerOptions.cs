@@ -1,9 +1,9 @@
 using System.Text.Json.Serialization;
 using AzureMcp.Options;
 
-namespace AzureMcp.Areas.AppInsightsProfiler.Options;
+namespace AzureMcp.Areas.ApplicationInsights.Options;
 
-public class AppInsightsProfilerOptions : SubscriptionOptions
+public class ProfilerOptions : SubscriptionOptions
 {
     [JsonPropertyName("base-url")]
     /// <summary>

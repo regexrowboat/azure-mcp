@@ -1,12 +1,11 @@
-using AzureMcp.Areas.AppInsightsProfiler.Options;
-using AzureMcp.Areas.AppInsightsProfiler.Services;
-using AzureMcp.Commands.AppInsightsProfiler;
+using AzureMcp.Areas.ApplicationInsights.Options;
+using AzureMcp.Areas.ApplicationInsights.Services;
 using AzureMcp.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 
-namespace AzureMcp.Areas.AppInsightsProfiler.Commands;
+namespace AzureMcp.Areas.ApplicationInsights.Commands;
 
-public class ListInsightsCommand(ILogger<ListInsightsCommand> logger) : AppInsightsProfilerBaseCommand(logger)
+public class ListInsightsCommand(ILogger<ListInsightsCommand> logger) : BaseProfilerCommand(logger)
 {
     private const string CommandTitle = "List Code Optimization Insights";
     private readonly Option<Guid> _appIdOption = new(
@@ -28,7 +27,7 @@ public class ListInsightsCommand(ILogger<ListInsightsCommand> logger) : AppInsig
         command.AddOption(_appIdOption);
     }
 
-    protected override AppInsightsProfilerOptions BindOptions(ParseResult parseResult)
+    protected override ProfilerOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.AppId = parseResult.GetValueForOption(_appIdOption);
@@ -38,7 +37,7 @@ public class ListInsightsCommand(ILogger<ListInsightsCommand> logger) : AppInsig
     [McpServerTool(Destructive = false, ReadOnly = true, Title = CommandTitle)]
     public async override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        AppInsightsProfilerOptions options = BindOptions(parseResult);
+        ProfilerOptions options = BindOptions(parseResult);
 
         try
         {
@@ -49,7 +48,7 @@ public class ListInsightsCommand(ILogger<ListInsightsCommand> logger) : AppInsig
 
             context.Activity?.WithSubscriptionTag(options);
 
-            IAppInsightsProfilerDataplaneService dataplane = context.GetService<IAppInsightsProfilerDataplaneService>();
+            IProfilerDataplaneService dataplane = context.GetService<IProfilerDataplaneService>();
             var insights = await dataplane.GetInsightsAsync(
                 [options.AppId],
                 options.StartDateTimeUtc,
@@ -59,7 +58,7 @@ public class ListInsightsCommand(ILogger<ListInsightsCommand> logger) : AppInsig
             context.Response.Results = insights?.Count > 0 ?
                 ResponseResult.Create(
                     insights,
-                    AppInsightsProfilerJsonContext.Default.ListJsonNode) :
+                    ProfilerJsonContext.Default.ListJsonNode) :
                 null;
         }
         catch (Exception ex)
