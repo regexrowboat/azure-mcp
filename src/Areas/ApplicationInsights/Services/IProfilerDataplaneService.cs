@@ -1,8 +1,8 @@
 using System.Text.Json.Nodes;
 
-namespace AzureMcp.Areas.AppInsightsProfiler.Services;
+namespace AzureMcp.Areas.ApplicationInsights.Services;
 
-public interface IAppInsightsProfilerDataplaneService
+public interface IProfilerDataplaneService
 {
     Task<List<JsonNode>> GetInsightsAsync(
         IEnumerable<Guid> appIds,
