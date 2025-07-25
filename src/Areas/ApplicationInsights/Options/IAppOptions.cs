@@ -14,10 +14,5 @@ namespace AzureMcp.Areas.ApplicationInsights.Options
         /// The resource id of the Application Insights resource.
         /// </summary>
         string? ResourceId { get; set; }
-
-        /// <summary>
-        /// The intent for using the tool.
-        /// </summary>
-        string? Intent { get; set; }
     }
 }

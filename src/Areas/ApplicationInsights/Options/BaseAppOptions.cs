@@ -28,7 +28,4 @@ public class BaseAppOptions : BaseMonitorOptions, IAppOptions
     /// </summary>
     [JsonPropertyName(ApplicationInsightsOptionDefinitions.ResourceIdName)]
     public string? ResourceId { get; set; }
-
-    [JsonPropertyName(ApplicationInsightsOptionDefinitions.IntentName)]
-    public string? Intent { get; set; }
 }

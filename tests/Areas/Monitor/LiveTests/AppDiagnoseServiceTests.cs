@@ -38,9 +38,9 @@ namespace AzureMcp.Tests.Areas.Monitor.LiveTests
             sc.AddAzureMcpServer(new AzureMcp.Areas.Server.Options.ServiceStartOptions
             {
                 Transport = "stdio",
-                Namespace = new[] { "monitor" },
-                Mode = "all",
-                ReadOnly = false
+                Namespace = new string[] { "applicationinsights" },
+                ReadOnly = false,
+                Mode = "all"
             });
 
             var sp = sc.BuildServiceProvider();
@@ -53,25 +53,38 @@ namespace AzureMcp.Tests.Areas.Monitor.LiveTests
             {
                 Params = new ModelContextProtocol.Protocol.CallToolRequestParams
                 {
-                    Name = "monitor_app_correlate_time",
+                    Name = "applicationinsights",
                     Arguments = new Dictionary<string, JsonElement>
                     {
-                        { "subscription", JsonSerializer.SerializeToElement("4e960cbd-a6b8-49db-98ca-7d3fa323a005") },
-                        { "resource-name", JsonSerializer.SerializeToElement("cdsfe-int-servicetelemetry-ai") },
-                        { "symptom", JsonSerializer.SerializeToElement("Correlate failing requests with exceptions by type using Application Insights time correlation analysis.") },
-                        { "data-sets", JsonSerializer.SerializeToElement(new List<AppCorrelateDataSet>
-                        {
-                            new AppCorrelateDataSet
-                            {
-                                Table = "requests",
-                                Filters = "success=false",
-                                SplitBy = "resultCode"
-                            }
-                        })
-                        }
+                        { "learn", JsonSerializer.SerializeToElement(true) },
+                        { "intent", JsonSerializer.SerializeToElement("learn available tools") },
                     }
                 }
             }, CancellationToken.None);
+
+            //await runtime.CallToolHandler(new ModelContextProtocol.Server.RequestContext<ModelContextProtocol.Protocol.CallToolRequestParams>(server)
+            //{
+            //    Params = new ModelContextProtocol.Protocol.CallToolRequestParams
+            //    {
+            //        Name = "monitor_app_correlate_time",
+            //        Arguments = new Dictionary<string, JsonElement>
+            //        {
+            //            { "subscription", JsonSerializer.SerializeToElement("4e960cbd-a6b8-49db-98ca-7d3fa323a005") },
+            //            { "resource-name", JsonSerializer.SerializeToElement("cdsfe-int-servicetelemetry-ai") },
+            //            { "symptom", JsonSerializer.SerializeToElement("Correlate failing requests with exceptions by type using Application Insights time correlation analysis.") },
+            //            { "data-sets", JsonSerializer.SerializeToElement(new List<AppCorrelateDataSet>
+            //            {
+            //                new AppCorrelateDataSet
+            //                {
+            //                    Table = "requests",
+            //                    Filters = "success=false",
+            //                    SplitBy = "resultCode"
+            //                }
+            //            })
+            //            }
+            //        }
+            //    }
+            //}, CancellationToken.None);
         }
 
 

@@ -17,15 +17,6 @@ namespace AzureMcp.Areas.ApplicationInsights.Options
         public const string FiltersName = "filters";
         public const string ItemIdName = "item-id";
         public const string ItemTypeName = "item-type";
-        public const string IntentName = "intent";
-
-        public static readonly Option<string> Intent = new(
-            $"--{IntentName}",
-            "Describe what information you're trying to get by using this tool."
-        )
-        {
-            IsRequired = true
-        };
 
         public static readonly Option<string> ResourceName = new(
             $"--{ResourceNameName}",
@@ -134,7 +125,23 @@ namespace AzureMcp.Areas.ApplicationInsights.Options
 
                 try
                 {
-                    var dataSets = JsonSerializer.Deserialize(result.Tokens[0].Value, ApplicationInsightsJsonContext.Default.ListAppCorrelateDataSet);
+                    var dataSets = JsonSerializer.Deserialize(result.Tokens[0].Value.Trim('\''), ApplicationInsightsJsonContext.Default.ListAppCorrelateDataSet);
+
+                    foreach (var dataSet in dataSets ?? Enumerable.Empty<AppCorrelateDataSet>())
+                    {
+                        if (string.IsNullOrWhiteSpace(dataSet.Table))
+                        {
+                            return new AppCorrelateDataSetParseResult()
+                            {
+                                IsValid = false,
+                                ErrorMessage = $"Each data set must have a valid 'table' property."
+                            };
+                        }
+                        if (string.IsNullOrWhiteSpace(dataSet.Aggregation))
+                        {
+                            dataSet.Aggregation = "Count"; // Default aggregation
+                        }
+                    }
 
                     return new AppCorrelateDataSetParseResult()
                     {

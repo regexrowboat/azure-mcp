@@ -18,7 +18,6 @@ public abstract class BaseAppCommand<
     protected readonly Option<string> _resourceNameOption = ApplicationInsightsOptionDefinitions.ResourceName;
     protected new readonly Option<string> _resourceGroupOption = ApplicationInsightsOptionDefinitions.ResourceGroup;
     protected readonly Option<string> _resourceIdOption = ApplicationInsightsOptionDefinitions.ResourceId;
-    protected readonly Option<string> _intentOption = ApplicationInsightsOptionDefinitions.Intent;
 
     protected override void RegisterOptions(Command command)
     {
@@ -26,7 +25,6 @@ public abstract class BaseAppCommand<
         command.AddOption(_resourceNameOption);
         command.AddOption(_resourceGroupOption);
         command.AddOption(_resourceIdOption);
-        command.AddOption(_intentOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
@@ -36,7 +34,6 @@ public abstract class BaseAppCommand<
         options.ResourceGroup = parseResult.GetValueForOption(_resourceGroupOption);
         options.ResourceName = parseResult.GetValueForOption(_resourceNameOption);
         options.ResourceId = parseResult.GetValueForOption(_resourceIdOption);
-        options.Intent = parseResult.GetValueForOption(_intentOption);
 
         return options;
     }

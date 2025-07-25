@@ -17,12 +17,12 @@ namespace AzureMcp.Areas.ApplicationInsights
         {
             // App diagnose commands
             var app = new CommandGroup("applicationinsights", "Application Insights operations - Commands for diagnosing problems with applications monitored with Application Insights.");
-            rootGroup.AddSubGroup(app);
-
             app.AddCommand("correlate-time", new AppCorrelateTimeCommand(loggerFactory.CreateLogger<AppCorrelateTimeCommand>()));
             app.AddCommand("get-impact", new AppImpactCommand(loggerFactory.CreateLogger<AppImpactCommand>()));
             app.AddCommand("get-trace", new AppGetTraceCommand(loggerFactory.CreateLogger<AppGetTraceCommand>()));
             app.AddCommand("list-traces", new AppListTraceCommand(loggerFactory.CreateLogger<AppListTraceCommand>()));
+
+            rootGroup.AddSubGroup(app);
         }
     }
 }
