@@ -7,6 +7,7 @@ using Azure.Monitor.Query.Models;
 using AzureMcp.Areas.Monitor.Models;
 using AzureMcp.Options;
 using AzureMcp.Services.Azure;
+using AzureMcp.Services.Azure.Resource;
 using MetricDefinition = AzureMcp.Areas.Monitor.Models.MetricDefinition;
 using MetricNamespace = AzureMcp.Areas.Monitor.Models.MetricNamespace;
 using MetricResult = AzureMcp.Areas.Monitor.Models.MetricResult;

@@ -7,6 +7,7 @@ using Azure.Monitor.Query;
 using Azure.Monitor.Query.Models;
 using AzureMcp.Areas.Monitor.Services;
 using AzureMcp.Options;
+using AzureMcp.Services.Azure.Resource;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;

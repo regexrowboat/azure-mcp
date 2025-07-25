@@ -7,7 +7,6 @@ using AzureMcp.Areas.Monitor.Commands.Metrics;
 using AzureMcp.Areas.Monitor.Commands.Table;
 using AzureMcp.Areas.Monitor.Commands.TableType;
 using AzureMcp.Areas.Monitor.Commands.Workspace;
-using AzureMcp.Areas.Monitor.Commands.App;
 using AzureMcp.Areas.Monitor.Services;
 using AzureMcp.Commands;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,10 +20,8 @@ public class MonitorSetup : IAreaSetup
     {
         services.AddSingleton<IMonitorService, MonitorService>();
         services.AddSingleton<IMonitorHealthModelService, MonitorHealthModelService>();
-        services.AddSingleton<IResourceResolverService, ResourceResolverService>();
         services.AddSingleton<IMetricsQueryClientService, MetricsQueryClientService>();
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
-        services.AddSingleton<IAppDiagnoseService, AppDiagnoseService>();
     }
 
     public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
@@ -61,23 +58,6 @@ public class MonitorSetup : IAreaSetup
         monitorTable.AddCommand("list", new TableListCommand(loggerFactory.CreateLogger<TableListCommand>()));
 
         monitorTableType.AddCommand("list", new TableTypeListCommand(loggerFactory.CreateLogger<TableTypeListCommand>()));
-
-        // App diagnose commands
-        var app = new CommandGroup("app", "App operations");
-        monitor.AddSubGroup(app);
-
-        var correlate = new CommandGroup("correlate", "App Correlate operations - Commands for performing correlation analysis on Application Insights data.");
-        app.AddSubGroup(correlate);
-
-        correlate.AddCommand("time", new AppCorrelateTimeCommand(loggerFactory.CreateLogger<AppCorrelateTimeCommand>()));
-        correlate.AddCommand("impact", new AppImpactCommand(loggerFactory.CreateLogger<AppImpactCommand>()));
-
-        var trace = new CommandGroup("trace", "App Trace operations - Commands for working with Application Insights traces.");
-        correlate.AddSubGroup(trace);
-
-        trace.AddCommand("get", new AppGetTraceCommand(loggerFactory.CreateLogger<AppGetTraceCommand>()));
-        trace.AddCommand("list", new AppListTraceCommand(loggerFactory.CreateLogger<AppListTraceCommand>()));
-        trace.AddCommand("get-span", new AppGetSpanCommand(loggerFactory.CreateLogger<AppGetSpanCommand>()));
 
         var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for working with Azure Monitor Health Models.");
         monitor.AddSubGroup(health);
