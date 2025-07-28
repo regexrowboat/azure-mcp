@@ -3,8 +3,8 @@ using System.Text;
 using Azure;
 using Azure.Core;
 using Azure.Monitor.Query;
-using Azure.Monitor.Query.Models;
 using AzureMcp.Areas.ApplicationInsights.Models;
+using AzureMcp.Areas.ApplicationInsights.Models.Query;
 using AzureMcp.Areas.ApplicationInsights.Options;
 using AzureMcp.Commands.Monitor;
 using AzureMcp.Options;
@@ -13,28 +13,16 @@ using AzureMcp.Services.Azure.Resource;
 
 namespace AzureMcp.Areas.ApplicationInsights.Services
 {
-    public class AppDiagnoseService(IResourceResolverService resourceResolverService) : BaseAzureService, IAppDiagnoseService
+    public class AppDiagnoseService(IResourceResolverService resourceResolverService, IAppLogsQueryService appLogsQueryService) : BaseAzureService, IAppDiagnoseService
     {
         private readonly IResourceResolverService _resourceResolverService = resourceResolverService;
-        private static readonly StandardFields _standardFields = new StandardFields();
+        private readonly IAppLogsQueryService _queryService = appLogsQueryService;
 
         public async Task<DistributedTraceResult> GetDistributedTrace(string subscription, string? resourceGroup, string? resourceName, string? resourceId, string traceId, string? spanId, DateTime startTime, DateTime endTime, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
         {
             ResourceIdentifier resolvedResource = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, "microsoft.insights/components", resourceName ?? resourceId!, tenant, retryPolicy);
 
-            var credential = await GetCredential(tenant);
-            var options = AddDefaultPolicies(new LogsQueryClientOptions());
-
-            if (retryPolicy != null)
-            {
-                options.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-                options.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-                options.Retry.MaxRetries = retryPolicy.MaxRetries;
-                options.Retry.Mode = retryPolicy.Mode;
-                options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-            }
-
-            var client = new LogsQueryClient(credential, options);
+            var client = await _queryService.CreateClientAsync(resolvedResource, tenant, retryPolicy);
 
             QueryTimeRange queryTimeRange = new QueryTimeRange(startTime, endTime);
 
@@ -44,7 +32,7 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
             | project-away customMeasurements, _ResourceId, itemCount, client_Type, client_Model, client_OS, client_IP, client_City, client_StateOrProvince, client_CountryOrRegion, client_Browser, appId, appName, iKey, sdkVersion
             """;
 
-            var response = await client.QueryResourceAsync(resolvedResource, kql, queryTimeRange);
+            var response = await client.QueryResourceAsync<DistributedTraceQueryResponse>(resolvedResource, kql, queryTimeRange);
 
             List<SpanSummary> spans = new List<SpanSummary>();
 
@@ -53,62 +41,50 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
                 // Dictionary to keep track of spans by ID and parent-child relationships
                 var parents = new Dictionary<int, List<string>>();
                 var spanMap = new Dictionary<string, SpanSummary>();
-                SpanSummary[] allSpans = new SpanSummary[response.Value.Table.Rows.Count];
-
-                Dictionary<string, int> columnMap = new();
-
-                foreach (var column in response.Value.Table.Columns)
-                {
-                    // Map column names to their index for easy access
-                    columnMap[column.Name] = columnMap.Count;
-                }
+                SpanSummary[] allSpans = new SpanSummary[response.Count];
 
                 int rowId = 0;
 
                 // Process each row in the query results
-                foreach (var row in response.Value.Table.Rows)
+                foreach (var row in response)
                 {
-                    string? currentSpanId = GetColumnIfExists(row, columnMap, _standardFields.Id);
-                    string? parentSpanId = GetColumnIfExists(row, columnMap, _standardFields.OperationParentId);
+                    string? currentSpanId = row.Data.id;
+                    string? parentSpanId = row.Data.operation_ParentId;
+                    string? itemId = row.Data.itemId;
 
-                    var successString = GetColumnIfExists(row, columnMap, _standardFields.Success);
+                    if (itemId == null)
+                    {
+                        // skip rows without an ItemId
+                        continue;
+                    }
+
+                    var successString = row.Data.success;
 
                     var spanDetails = new SpanSummary
                     {
                         RowId = rowId,
                         SpanId = currentSpanId,
                         ParentId = parentSpanId,
-                        ItemId = GetColumnIfExists(row, columnMap, _standardFields.ItemId),
-                        ResponseCode = GetColumnIfExists(row, columnMap, _standardFields.ResultCode),
-                        ItemType = GetColumnIfExists(row, columnMap, _standardFields.ItemType),
+                        ItemId = itemId,
+                        ResponseCode = row.Data.resultCode,
+                        ItemType = row.Data.itemType,
                         IsSuccessful = !string.IsNullOrEmpty(successString) ? bool.Parse(successString!) : null,
                         ChildSpans = new List<SpanSummary>(),
                         Properties = new List<KeyValuePair<string, string>>(),
-                        Name = GetColumnIfExists(row, columnMap, _standardFields.Name),
-                        Duration = row[columnMap[_standardFields.Duration]] is double duration ? TimeSpan.FromMilliseconds(duration) : null
+                        Name = row.Data.name,
+                        Duration = TimeSpan.FromMilliseconds(row.Data.duration ?? 0)
                     };
 
                     // Add all other properties as key-value pairs
-                    foreach (var column in columnMap)
-                    {
-                        string columnName = column.Key;
-                        string? value = row[column.Value]?.ToString();
 
-                        if (!IsStandardField(columnName) && !string.IsNullOrEmpty(value))
-                        {
-                            spanDetails.Properties.Add(new KeyValuePair<string, string>(
-                                columnName,
-                                value!
-                            ));
-                        }
-                    }
+                    spanDetails.Properties = row.OtherColumns.Select(t => new KeyValuePair<string, string>(t.Key, t.Value?.ToString()!)).ToList();
 
-                    DateTime end = row[columnMap[_standardFields.Timestamp]] is DateTime timestamp ? timestamp : DateTime.TryParse(row[columnMap[_standardFields.Timestamp]].ToString(), out DateTime r) ? r : default;
+                    DateTime end = row.Data.timestamp?.UtcDateTime ?? default;
 
-                    string? target = GetColumnIfExists(row, columnMap, _standardFields.Target);
-                    string? problemId = GetColumnIfExists(row, columnMap, _standardFields.ProblemId);
-                    string? operationName = GetColumnIfExists(row, columnMap, _standardFields.OperationName);
-                    string? name = GetColumnIfExists(row, columnMap, _standardFields.Name);
+                    string? target = row.Data.target;
+                    string? problemId = row.Data.problemId;
+                    string? operationName = row.Data.operation_Name;
+                    string? name = row.Data.name;
 
                     spanDetails.Name = target ?? problemId ?? operationName ?? name;
 
@@ -142,7 +118,7 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
                 foreach (var span in allSpans)
                 {
                     // Find the parent span if it exists
-                    if (span.ParentId != null && spanMap.TryGetValue(span.ParentId, out var parentSpan))
+                    if (span.ParentId != span.SpanId && span.ParentId != null && spanMap.TryGetValue(span.ParentId, out var parentSpan))
                     {
                         // Add this span to its parent's child spans
                         parentSpan.ChildSpans.Add(span);
@@ -190,27 +166,15 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
         {
             ResourceIdentifier resolvedResource = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, "microsoft.insights/components", resourceName ?? resourceId!, tenant, retryPolicy);
 
-            var credential = await GetCredential(tenant);
-            var options = AddDefaultPolicies(new LogsQueryClientOptions());
-
-            if (retryPolicy != null)
-            {
-                options.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-                options.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-                options.Retry.MaxRetries = retryPolicy.MaxRetries;
-                options.Retry.Mode = retryPolicy.Mode;
-                options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-            }
-
-            var client = new LogsQueryClient(credential, options);
+            var client = await _queryService.CreateClientAsync(resolvedResource, tenant, retryPolicy);
 
             QueryTimeRange queryTimeRange = new QueryTimeRange(startTime, endTime);
 
             var query = BuildListTracesKQL(table, filters, startTime, endTime);
 
-            var response = await client.QueryResourceAsync(resolvedResource, query, queryTimeRange);
+            var response = await client.QueryResourceAsync<ListTraceQueryResponse>(resolvedResource, query, queryTimeRange);
 
-            if (response == null || response.Value.Table.Rows.Count == 0)
+            if (response == null || response.Count == 0)
             {
                 return new AppListTraceResult
                 {
@@ -220,24 +184,19 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
             }
 
             List<AppListTraceEntry> rows = new List<AppListTraceEntry>();
-            Dictionary<string, int> columnMap = new Dictionary<string, int>();
-            for (int i = 0; i < response.Value.Table.Columns.Count; i++)
-            {
-                columnMap[response.Value.Table.Columns[i].Name] = i;
-            }
 
-            foreach (var row in response.Value.Table.Rows)
+            foreach (var row in response)
             {
                 var entry = new AppListTraceEntry
                 {
-                    ProblemId = GetColumnIfExists(row, columnMap, "problemId"),
-                    Target = GetColumnIfExists(row, columnMap, "target"),
-                    TestLocation = GetColumnIfExists(row, columnMap, "location"),
-                    TestName = GetColumnIfExists(row, columnMap, "name"),
-                    Type = GetColumnIfExists(row, columnMap, "type"),
-                    OperationName = GetColumnIfExists(row, columnMap, "operation_Name"),
-                    ResultCode = GetColumnIfExists(row, columnMap, "resultCode"),
-                    Traces = (JsonSerializer.Deserialize(row[columnMap["traces"]].ToString()!, ApplicationInsightsJsonContext.Default.ListTraceIdEntry) ?? new List<TraceIdEntry>()).Distinct().ToList()
+                    ProblemId = row.Data.problemId,
+                    Target = row.Data.target,
+                    TestLocation = row.Data.location,
+                    TestName = row.Data.name,
+                    Type = row.Data.type,
+                    OperationName = row.Data.operation_Name,
+                    ResultCode = row.Data.resultCode,
+                    Traces = (JsonSerializer.Deserialize(row.Data.traces!, ApplicationInsightsJsonContext.Default.ListTraceIdEntry) ?? new List<TraceIdEntry>()).Distinct().ToList()
                 };
                 
                 rows.Add(entry);
@@ -254,18 +213,7 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
         {
             ResourceIdentifier resolvedResource = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, "microsoft.insights/components", resourceName ?? resourceId!, tenant, retryPolicy);
 
-            var credential = await GetCredential(tenant);
-            var options = AddDefaultPolicies(new LogsQueryClientOptions());
-
-            if (retryPolicy != null)
-            {
-                options.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-                options.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-                options.Retry.MaxRetries = retryPolicy.MaxRetries;
-                options.Retry.Mode = retryPolicy.Mode;
-                options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-            }
-            var client = new LogsQueryClient(credential, options);
+            var client = await _queryService.CreateClientAsync(resolvedResource, tenant, retryPolicy);
 
             // Convert the data sets into actual KQL queries...
             QueryTimeRange queryTimeRange = new QueryTimeRange(startTime, endTime);
@@ -283,48 +231,31 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
         {
             ResourceIdentifier resolvedResource = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, "microsoft.insights/components", resourceName ?? resourceId!, tenant, retryPolicy);
 
-            var credential = await GetCredential(tenant);
-            var options = AddDefaultPolicies(new LogsQueryClientOptions());
-
-            if (retryPolicy != null)
-            {
-                options.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-                options.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-                options.Retry.MaxRetries = retryPolicy.MaxRetries;
-                options.Retry.Mode = retryPolicy.Mode;
-                options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-            }
-
-            var client = new LogsQueryClient(credential, options);
+            var client = await _queryService.CreateClientAsync(resolvedResource, tenant, retryPolicy);
 
             QueryTimeRange queryTimeRange = new QueryTimeRange(startTime, endTime);
 
             var query = BuildImpactKQL(table, filters, startTime, endTime);
 
-            var response = await client.QueryResourceAsync(resolvedResource, query, queryTimeRange);
+            var response = await client.QueryResourceAsync<ImpactQueryResponse>(resolvedResource, query, queryTimeRange);
 
-            if (response == null || response.Value.Table.Rows.Count == 0)
+            if (response == null || response.Count == 0)
             {
                 return new List<AppImpactResult>();
             }
 
             List<AppImpactResult> results = new List<AppImpactResult>();
-            Dictionary<string, int> columnMap = new Dictionary<string, int>();
-            for (int i = 0; i < response.Value.Table.Columns.Count; i++)
-            {
-                columnMap[response.Value.Table.Columns[i].Name] = i;
-            }
-            foreach (var row in response.Value.Table.Rows)
+            foreach (var row in response)
             {
                 var result = new AppImpactResult
                 {
-                    CloudRoleName = GetColumnIfExists(row, columnMap, "cloud_RoleName") ?? "Unknown",
-                    ImpactedInstances = int.Parse(GetColumnIfExists(row, columnMap, "ImpactedInstances") ?? "0"),
-                    TotalInstances = int.Parse(GetColumnIfExists(row, columnMap, "TotalInstances") ?? "0"),
-                    ImpactedRequests = int.Parse(GetColumnIfExists(row, columnMap, "ImpactedRequests") ?? "0"),
-                    TotalRequests = int.Parse(GetColumnIfExists(row, columnMap, "TotalRequests") ?? "0"),
-                    ImpactedRequestsPercentage = double.Parse(GetColumnIfExists(row, columnMap, "ImpactedRequestsPercent") ?? "0.0"),
-                    ImpactedInstancePercentage = double.Parse(GetColumnIfExists(row, columnMap, "ImpactedInstancePercent") ?? "0.0")
+                    CloudRoleName = row.Data.cloud_RoleName ?? "Unknown",
+                    ImpactedInstances = row.Data.ImpactedInstances,
+                    TotalInstances = row.Data.TotalInstances,
+                    ImpactedRequests = row.Data.ImpactedRequests,
+                    TotalRequests = row.Data.TotalRequests,
+                    ImpactedRequestsPercentage = row.Data.ImpactedRequestsPercent,
+                    ImpactedInstancePercentage = row.Data.ImpactedInstancePercent
                 };
                 
                 results.Add(result);
@@ -361,12 +292,6 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
                 """;
         }
 
-        private static string? GetColumnIfExists(LogsTableRow? row, Dictionary<string, int> columnMap, string columnName)
-        {
-            string? result = columnMap.TryGetValue(columnName, out int index) ? row?[index]?.ToString() : null;
-            return string.IsNullOrEmpty(result) ? null : result;
-        }
-
         private static DistributedTraceResult FormatDistributedTrace(string traceId, List<SpanSummary> spans)
         {
             if (spans.Count == 0)
@@ -388,9 +313,11 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
 
             StringBuilder results = new StringBuilder();
 
+            HashSet<string> visited = new HashSet<string>();
+
             foreach (var span in spans)
             {
-                AddSpan("", results, span, startTime);
+                AddSpan("", results, span, startTime, visited);
             }
 
             return new DistributedTraceResult
@@ -408,8 +335,9 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
             };
         }
 
-        private static void AddSpan(string indent, StringBuilder results, SpanSummary span, DateTime startTime)
+        private static void AddSpan(string indent, StringBuilder results, SpanSummary span, DateTime startTime, HashSet<string> visited)
         {
+            visited.Add(span.ItemId);
             string success = span.ItemType == "exception" ? "⚠️" : span.IsSuccessful.HasValue ? span.IsSuccessful.Value ? "✅" : "❌" : "❓";
             double start = (span.StartTime - startTime).TotalMilliseconds;
             double end = (span.EndTime - startTime).TotalMilliseconds;
@@ -420,10 +348,13 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
 
             foreach (var child in childSpans)
             {
-                AddSpan(indent + "    ", results, child, startTime);
+                // logic to avoid infinite loops in case of circular references
+                if (!visited.Contains(child.ItemId))
+                {
+                    AddSpan(indent + "    ", results, child, startTime, visited);
+                }
             }
         }
-
         private static string BuildListTracesKQL(string table, string? filters, DateTime startTime, DateTime endTime)
         {
             List<string> kqlFilters = (filters == null ? Array.Empty<string>() : GetKqlFilters(filters)).ToList();
@@ -475,9 +406,9 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
                 """;
 
             string availabilityResultsQuery = $"""
-                availabilityResults{(table == "availabilityResults" ? string.Join("\n", kqlFilters) : "")}
+                availabilityResults
                 | where timestamp >= start and timestamp <= end
-                | extend success=iff(success == '1', "True", "False")
+                | extend success=iff(success == '1', "True", "False"){(table == "availabilityResults" ? string.Join("\n", kqlFilters) : "")}
                 | project name, location, operation_Id, itemType{(table == "availabilityResults" ? ", id, itemCount" : "")}
                 """;
 
@@ -554,78 +485,20 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
             return ancestors;
         }
 
-        private static bool IsStandardField(string columnName)
-        {
-            return _standardFields.Values.Contains(columnName, StringComparer.OrdinalIgnoreCase);
-        }
-
-        private class StandardFields
-        {
-            public IEnumerable<string> Values => StandardFieldValues;
-
-            public static List<string> StandardFieldValues = new List<string>();
-
-            public string Id = AddValue("id");
-            public string OperationParentId = AddValue("operation_ParentId");
-            public string OperationName = AddValue("operation_Name");
-            public string ResultCode = AddValue("resultCode");
-            public string ItemType = AddValue("itemType");
-            public string Success = AddValue("success");
-            public string Timestamp = AddValue("timestamp");
-            public string Duration = AddValue("duration");
-            public string OperationId = AddValue("operation_Id");
-            public string ItemId = AddValue("itemId");
-            public string ProblemId = AddValue("problemId");
-            public string Type = AddValue("type");
-            public string Name = AddValue("name");
-            public string Target = AddValue("target");
-
-            public StandardFields()
-            {
-
-            }
-
-            private static string AddValue(string name)
-            {
-                StandardFieldValues.Add(name);
-                return name;
-            }
-        }
-
-        private static async Task<AppCorrelateTimeResult> ExecuteQueryAsync(ResourceIdentifier resourceId, LogsQueryClient client, QueryTimeRange timeRange, string query, string description, string interval)
+        private static async Task<AppCorrelateTimeResult> ExecuteQueryAsync(ResourceIdentifier resourceId, IAppLogsQueryClient client, QueryTimeRange timeRange, string query, string description, string interval)
         {
             try
             {
                 List<AppCorrelateTimeSeries> timeSeries = new List<AppCorrelateTimeSeries>();
-                var response = await client.QueryResourceAsync(
+                var response = await client.QueryResourceAsync<TimeSeriesCorrelationResponse>(
                     resourceId,
                     query,
                     timeRange);
 
-                int valueIndex = -1;
-                int splitIndex = -1;
-                int i = 0;
-                foreach (var column in response.Value.Table.Columns)
+                foreach(var row in response)
                 {
-                    if (column.Name == "Value")
-                    {
-                        valueIndex = i;
-                    }
-                    else if (column.Name == "split")
-                    {
-                        splitIndex = i;
-                    }
-                    i++;
-                }
-
-                foreach(var row in response.Value.Table.Rows)
-                {
-                    if (valueIndex == -1 || splitIndex == -1)
-                    {
-                        throw new Exception("Query result does not contain expected columns 'Value' and 'split'.");
-                    }
-                    string split = row[splitIndex]?.ToString() ?? "Unknown";
-                    double[]? value = JsonSerializer.Deserialize(row[valueIndex].ToString()!, MonitorJsonContext.Default.DoubleArray);
+                    string split = row.Data.split ?? "Unknown";
+                    double[]? value = JsonSerializer.Deserialize(row.Data.Value?.ToString()!, MonitorJsonContext.Default.DoubleArray);
                     timeSeries.Add(new AppCorrelateTimeSeries
                     {
                         Data = value ?? Array.Empty<double>(),

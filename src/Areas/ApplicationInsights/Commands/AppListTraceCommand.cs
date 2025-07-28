@@ -101,7 +101,7 @@ namespace AzureMcp.Areas.ApplicationInsights.Commands
                 {
                     var table = commandResult.GetValueForOption(_tableOption)?.ToLowerInvariant();
 
-                    if (table != "exceptions" && table != "dependencies" && table != "availabilityResults" && table != "requests")
+                    if (table != "exceptions" && table != "dependencies" && table != "availabilityresults" && table != "requests")
                     {
                         result.IsValid = false;
                         result.ErrorMessage = $"Invalid table specified. Valid options are: exceptions, dependencies, availabilityResults, requests.";

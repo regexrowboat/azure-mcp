@@ -10,6 +10,7 @@ namespace AzureMcp.Areas.ApplicationInsights
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IAppLogsQueryService, AppLogsQueryService>();
             services.AddSingleton<IAppDiagnoseService, AppDiagnoseService>();
         }
 

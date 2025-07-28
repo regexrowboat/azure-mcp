@@ -142,9 +142,7 @@ public sealed class AppImpactCommand(ILogger<AppImpactCommand> logger)
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = result?.Count > 0 ?
-                ResponseResult.Create(new AppImpactCommandResult(result), ApplicationInsightsJsonContext.Default.AppImpactCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new AppImpactCommandResult(result), ApplicationInsightsJsonContext.Default.AppImpactCommandResult);
         }
         catch (Exception ex)
         {

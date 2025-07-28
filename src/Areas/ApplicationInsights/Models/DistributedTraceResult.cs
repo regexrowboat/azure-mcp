@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Azure.Monitor.Query.Models;
 
 namespace AzureMcp.Areas.ApplicationInsights.Models
 {

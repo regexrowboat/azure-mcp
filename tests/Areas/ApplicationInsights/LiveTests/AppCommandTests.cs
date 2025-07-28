@@ -35,7 +35,7 @@ namespace AzureMcp.Tests.Areas.ApplicationInsights.LiveTests
             sc.AddSingleton<ITenantService, TenantService>();
             sc.AddSingleton<ISubscriptionService, SubscriptionService>();
             sc.AddSingleton<IResourceResolverService, ResourceResolverService>();
-            sc.AddSingleton<IAppDiagnoseService, AppDiagnoseService>();
+            new ApplicationInsightsSetup().ConfigureServices(sc);
 
             var sp = sc.BuildServiceProvider();
             _commandContext = new CommandContext(sp);

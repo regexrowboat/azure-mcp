@@ -181,5 +181,5 @@ public sealed class AppCorrelateTimeCommand(ILogger<AppCorrelateTimeCommand> log
         return context.Response;
     }
 
-    internal record AppCorrelateCommandResult(AppCorrelateTimeResult[]? Result);
+    public record AppCorrelateCommandResult(AppCorrelateTimeResult[]? Result);
 }
