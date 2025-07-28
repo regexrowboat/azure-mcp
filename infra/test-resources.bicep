@@ -34,6 +34,16 @@ module aks 'services/aks.bicep' = if (empty(areas) || contains(areas, 'Aks')) {
   }
 }
 
+module applicationInsights 'services/applicationinsights.bicep' = if (empty(areas) || contains(areas, 'ApplicationInsights')) {
+  name: '${deploymentName}-applicationinsights'
+  params: {
+    baseName: baseName
+    location: location
+    tenantId: tenantId
+    testApplicationOid: testApplicationOid
+  }
+}
+
 module appConfiguration 'services/appConfig.bicep' = if (empty(areas) || contains(areas, 'AppConfig')) {
   name: '${deploymentName}-appConfig'
   params: {
@@ -196,4 +206,3 @@ module workbooks 'services/workbooks.bicep' = if (empty(areas) || contains(areas
     monitoring
   ]
 }
-
