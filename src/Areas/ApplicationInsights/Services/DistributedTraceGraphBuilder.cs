@@ -1,0 +1,68 @@
+﻿using AzureMcp.Areas.ApplicationInsights.Models;
+
+namespace AzureMcp.Areas.ApplicationInsights.Services
+{
+    public class DistributedTraceGraphBuilder(string traceId)
+    {
+        private readonly Dictionary<int, List<string>> _parents = new();
+        private readonly Dictionary<string, SpanSummary> _indexBySpanId = new();
+        private readonly List<SpanSummary> _spans = new();
+        private readonly string _traceId = traceId;
+
+        public DistributedTraceGraphBuilder AddSpan(SpanSummary span)
+        {
+            string? currentSpanId = span.SpanId;
+            string? parentSpanId = span.ParentId;
+
+            if (parentSpanId != null && currentSpanId != parentSpanId && parentSpanId != _traceId)
+            {
+                if (_parents.TryGetValue(span.RowId, out List<string>? existingParents))
+                {
+                    // If we already have parents for this span, add the new parent
+                    existingParents.Add(parentSpanId);
+                }
+                else
+                {
+                    // Otherwise, create a new entry for this span with its parent
+                    _parents[span.RowId] = new List<string> { parentSpanId };
+                }
+            }
+
+            if (currentSpanId != null)
+            {
+                _indexBySpanId[currentSpanId] = span;
+            }
+
+            _spans.Add(span);
+
+            return this;
+        }
+
+        public List<SpanSummary> Build()
+        {
+            foreach (var span in _spans)
+            {
+                span.ChildSpans = GetChildren(span);
+
+                if (_parents.TryGetValue(span.RowId, out List<string>? parentIds) && parentIds?.Count > 0)
+                {
+                    span.ParentSpan = parentIds.Select(p => _indexBySpanId.TryGetValue(p, out SpanSummary? parentSpan) ? parentSpan : null).FirstOrDefault();
+                }
+            }
+
+            return _spans.ToList();
+        }
+
+        private List<SpanSummary> GetChildren(SpanSummary span)
+        {
+            List<SpanSummary> children = new List<SpanSummary>();
+            // Find the parent span if it exists
+            if (span.ParentId != span.SpanId && span.ParentId != null && _indexBySpanId.TryGetValue(span.ParentId, out var parentSpan))
+            {
+                // Add this span to its parent's child spans
+                children.Add(span);
+            }
+            return children;
+        }
+    }
+}

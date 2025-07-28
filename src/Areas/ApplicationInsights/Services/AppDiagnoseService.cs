@@ -34,132 +34,57 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
 
             var response = await client.QueryResourceAsync<DistributedTraceQueryResponse>(resolvedResource, kql, queryTimeRange);
 
+            DistributedTraceGraphBuilder graphBuilder = new DistributedTraceGraphBuilder(traceId);
+
             List<SpanSummary> spans = new List<SpanSummary>();
 
             if (response != null)
             {
-                // Dictionary to keep track of spans by ID and parent-child relationships
-                var parents = new Dictionary<int, List<string>>();
-                var spanMap = new Dictionary<string, SpanSummary>();
-                SpanSummary[] allSpans = new SpanSummary[response.Count];
-
                 int rowId = 0;
 
                 // Process each row in the query results
                 foreach (var row in response)
                 {
-                    string? currentSpanId = row.Data.id;
-                    string? parentSpanId = row.Data.operation_ParentId;
-                    string? itemId = row.Data.itemId;
-
-                    if (itemId == null)
-                    {
-                        // skip rows without an ItemId
-                        continue;
-                    }
-
-                    var successString = row.Data.success;
-
-                    var spanDetails = new SpanSummary
-                    {
-                        RowId = rowId,
-                        SpanId = currentSpanId,
-                        ParentId = parentSpanId,
-                        ItemId = itemId,
-                        ResponseCode = row.Data.resultCode,
-                        ItemType = row.Data.itemType,
-                        IsSuccessful = !string.IsNullOrEmpty(successString) ? bool.Parse(successString!) : null,
-                        ChildSpans = new List<SpanSummary>(),
-                        Properties = new List<KeyValuePair<string, string>>(),
-                        Name = row.Data.name,
-                        Duration = TimeSpan.FromMilliseconds(row.Data.duration ?? 0)
-                    };
-
-                    // Add all other properties as key-value pairs
-
-                    spanDetails.Properties = row.OtherColumns.Select(t => new KeyValuePair<string, string>(t.Key, t.Value?.ToString()!)).ToList();
-
-                    DateTime end = row.Data.timestamp?.UtcDateTime ?? default;
-
-                    string? target = row.Data.target;
-                    string? problemId = row.Data.problemId;
-                    string? operationName = row.Data.operation_Name;
-                    string? name = row.Data.name;
-
-                    spanDetails.Name = target ?? problemId ?? operationName ?? name;
-
-                    spanDetails.StartTime = end.Subtract(spanDetails.Duration ?? TimeSpan.Zero);
-                    spanDetails.EndTime = end;
-
-                    if (parentSpanId != null && currentSpanId != parentSpanId && parentSpanId != traceId)
-                    {
-                        if (parents.TryGetValue(rowId, out List<string>? existingParents))
-                        {
-                            // If we already have parents for this span, add the new parent
-                            existingParents.Add(parentSpanId);
-                        }
-                        else
-                        {
-                            // Otherwise, create a new entry for this span with its parent
-                            parents[rowId] = new List<string> { parentSpanId };
-                        }
-                    }
-
-                    if (currentSpanId != null)
-                    {
-                        spanMap[currentSpanId] = spanDetails;
-                    }
-
-                    allSpans[rowId] = spanDetails;
-
+                    var spanDetails = DistributedTraceQueryResponse.CreateSpanDetails(rowId, row);
+                    graphBuilder.AddSpan(spanDetails);
                     rowId++;
                 }
 
-                foreach (var span in allSpans)
-                {
-                    // Find the parent span if it exists
-                    if (span.ParentId != span.SpanId && span.ParentId != null && spanMap.TryGetValue(span.ParentId, out var parentSpan))
-                    {
-                        // Add this span to its parent's child spans
-                        parentSpan.ChildSpans.Add(span);
-                    }
-                }
+                List<SpanSummary> allSpans = graphBuilder.Build();
 
                 if (spanId == null)
                 {
                     // find the root spans
-                    var rootSpans = allSpans.Where(t =>
-                        !parents.TryGetValue(t.RowId, out List<string>? ids) ||
-                        (ids?.All(id => !spanMap.TryGetValue(id, out SpanSummary? span)) ?? true) // Check if any parent actually exists
-                    ).ToList();
-
-                    spans = rootSpans;
+                    spans = allSpans.Where(t => t.ParentSpan == null).ToList();
                 }
-                // Filter to only include the specified span, its ancestors, and direct descendants
-                else if (spanMap.TryGetValue(spanId, out var targetSpan))
+                else 
                 {
-                    // Find all ancestor spans (parents up to the root)
-                    var ancestorSpans = FindAncestorSpans(parents, spanMap, targetSpan);
+                    var targetSpan = allSpans.FirstOrDefault(t => t.SpanId == spanId);
 
-                    // The direct descendants are already in the ChildSpans property after building the hierarchy
-                    var directDescendants = targetSpan.ChildSpans;
-
-                    // The result should include the target span, its ancestors, and direct descendants
-                    var filteredSpans = new List<SpanSummary> { targetSpan };
-                    filteredSpans.AddRange(ancestorSpans);
-                    filteredSpans.AddRange(directDescendants);
-
-                    // Set the filtered spans to the result
-                    spans = filteredSpans;
-                }
-                else
-                {
-                    // If the specified span wasn't found, return an empty result
-                    spans = new List<SpanSummary>();
+                    if (targetSpan == null)
+                    {
+                        // If the specified span wasn't found, return an empty result
+                        spans = new List<SpanSummary>();
+                    }
+                    else
+                    {
+                        // Filter to only include the specified span, its ancestors, and direct descendants
+                        var currentSpan = targetSpan;
+                        // ancestors
+                        while (currentSpan.ParentSpan != null)
+                        {
+                            spans.Add(currentSpan.ParentSpan);
+                            currentSpan = currentSpan.ParentSpan;
+                        }
+                        // target span
+                        spans.Add(targetSpan);
+                        // children
+                        spans.AddRange(targetSpan.ChildSpans);
+                    }
                 }
             }
 
-            return FormatDistributedTrace(traceId, spans);
+            return DistributedTraceResult.Create(traceId, spans);
         }
 
         public async Task<AppListTraceResult> ListDistributedTraces(string subscription, string? resourceGroup, string? resourceName, string? resourceId, string? filters, string table, DateTime startTime, DateTime endTime, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
@@ -292,69 +217,6 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
                 """;
         }
 
-        private static DistributedTraceResult FormatDistributedTrace(string traceId, List<SpanSummary> spans)
-        {
-            if (spans.Count == 0)
-            {
-                return new DistributedTraceResult
-                {
-                    Description = "No spans available for the selected trace and span. Try a different traceId, spanId, or time range filter",
-                    TraceDetails = null,
-                    StartTime = null,
-                    TraceId = traceId
-                };
-            }
-
-            string description = $"This represents a distributed trace. Parent/child relationships are represented by indentation. Columns: ItemId, ItemType, Name, Success, ResultCode, StartToEnd";
-
-            DateTime startTime = spans.Min(s => s.StartTime);
-
-            spans = spans.OrderBy(s => s.StartTime).ToList();
-
-            StringBuilder results = new StringBuilder();
-
-            HashSet<string> visited = new HashSet<string>();
-
-            foreach (var span in spans)
-            {
-                AddSpan("", results, span, startTime, visited);
-            }
-
-            return new DistributedTraceResult
-            {
-                Description = description,
-                TraceDetails = results.ToString(),
-                StartTime = startTime,
-                TraceId = traceId,
-                RelevantSpans = spans.Where(t => t.ItemType == "exception")
-                    .Select(t => new SpanDetails
-                    {
-                        ItemId = t.ItemId,
-                        Properties = t.Properties
-                    }).ToList()
-            };
-        }
-
-        private static void AddSpan(string indent, StringBuilder results, SpanSummary span, DateTime startTime, HashSet<string> visited)
-        {
-            visited.Add(span.ItemId);
-            string success = span.ItemType == "exception" ? "⚠️" : span.IsSuccessful.HasValue ? span.IsSuccessful.Value ? "✅" : "❌" : "❓";
-            double start = (span.StartTime - startTime).TotalMilliseconds;
-            double end = (span.EndTime - startTime).TotalMilliseconds;
-            string duration = $"{Math.Round(start, 2)}->{Math.Round(end, 2)}";
-            results.AppendLine($"{indent}{span.ItemId}, {span.ItemType}, {span.Name}, {success}, {span.ResponseCode}, {duration}");
-
-            var childSpans = span.ChildSpans.OrderBy(span => span.StartTime).ToList();
-
-            foreach (var child in childSpans)
-            {
-                // logic to avoid infinite loops in case of circular references
-                if (!visited.Contains(child.ItemId))
-                {
-                    AddSpan(indent + "    ", results, child, startTime, visited);
-                }
-            }
-        }
         private static string BuildListTracesKQL(string table, string? filters, DateTime startTime, DateTime endTime)
         {
             List<string> kqlFilters = (filters == null ? Array.Empty<string>() : GetKqlFilters(filters)).ToList();

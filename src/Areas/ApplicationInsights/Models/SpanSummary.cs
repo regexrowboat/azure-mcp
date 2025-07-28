@@ -11,7 +11,7 @@ namespace AzureMcp.Areas.ApplicationInsights.Models
         public string? SpanId { get; set; }
 
         [JsonPropertyName("itemId")]
-        public required string ItemId { get; init; }
+        public string? ItemId { get; init; }
 
         [JsonPropertyName("parentId")]
         [JsonIgnore] // don't serialize parent ID, it's already in child spans
@@ -50,5 +50,8 @@ namespace AzureMcp.Areas.ApplicationInsights.Models
         [JsonPropertyName("childSpans")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<SpanSummary> ChildSpans { get; set; } = new List<SpanSummary>();
+
+        [JsonIgnore]
+        public SpanSummary? ParentSpan { get; set; } = null;
     }
 }
