@@ -9,6 +9,21 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
         private readonly List<SpanSummary> _spans = new();
         private readonly string _traceId = traceId;
 
+        public DistributedTraceGraphBuilder AddSpans(IEnumerable<SpanSummary> spans)
+        {
+            int rowId = 0;
+
+            // Process each row in the query results
+            foreach (var row in spans)
+            {
+                row.RowId = rowId; // Assign a unique RowId to each span
+                this.AddSpan(row);
+                rowId++;
+            }
+
+            return this;
+        }
+
         public DistributedTraceGraphBuilder AddSpan(SpanSummary span)
         {
             string? currentSpanId = span.SpanId;
@@ -38,7 +53,7 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
             return this;
         }
 
-        public List<SpanSummary> Build()
+        public DistributedTraceGraph Build()
         {
             foreach (var span in _spans)
             {
@@ -50,7 +65,7 @@ namespace AzureMcp.Areas.ApplicationInsights.Services
                 }
             }
 
-            return _spans.ToList();
+            return new DistributedTraceGraph(_spans.ToList());
         }
 
         private List<SpanSummary> GetChildren(SpanSummary span)

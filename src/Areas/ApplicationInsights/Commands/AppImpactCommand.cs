@@ -24,7 +24,7 @@ public sealed class AppImpactCommand(ILogger<AppImpactCommand> logger)
 
     // Define options from OptionDefinitions
     private readonly Option<string> _tableOption = ApplicationInsightsOptionDefinitions.Table;
-    private readonly Option<string> _filtersOption = ApplicationInsightsOptionDefinitions.Filters;
+    private readonly Option<string[]> _filtersOption = ApplicationInsightsOptionDefinitions.Filters;
     private readonly Option<string> _startTimeOption = ApplicationInsightsOptionDefinitions.StartTime;
     private readonly Option<string> _endTimeOption = ApplicationInsightsOptionDefinitions.EndTime;
 
@@ -38,10 +38,12 @@ public sealed class AppImpactCommand(ILogger<AppImpactCommand> logger)
 
         Example usage:
         Determine how many instances and the overall failure rate caused by requests with a 500 result code:
-        --table requests --filters resultCode="500"
+        "table": "requests",
+        "filters": ["resultCode=\"500\""]
 
         Determine how many instances and the overall failure rate caused by Azure Blob storage 500 errors:
-        --table dependencies --filters type="Azure Blob" resultCode="500"
+        "table": "dependencies",
+        "filters": ["type=\"Azure Blob\"", "resultCode=\"500\""]
 
         Use this tool for investigating issues with Application Insights resources.
 
@@ -70,7 +72,7 @@ public sealed class AppImpactCommand(ILogger<AppImpactCommand> logger)
         options.Table = parseResult.GetValueForOption(_tableOption);
         options.StartTime = DateTimeOffset.Parse(parseResult.GetValueForOption(_startTimeOption)!).UtcDateTime;
         options.EndTime = DateTimeOffset.Parse(parseResult.GetValueForOption(_endTimeOption)!).UtcDateTime;
-        options.Filters = parseResult.GetValueForOption(_filtersOption);
+        options.Filters = parseResult.GetValueForOption(_filtersOption) ?? Array.Empty<string>();
         return options;
     }
 

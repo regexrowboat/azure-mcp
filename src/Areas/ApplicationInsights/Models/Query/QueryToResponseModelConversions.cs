@@ -1,0 +1,78 @@
+﻿using AzureMcp.Areas.ApplicationInsights.Options;
+using AzureMcp.Commands.Monitor;
+
+namespace AzureMcp.Areas.ApplicationInsights.Models.Query
+{
+    public static class QueryToResponseModelConversions
+    {
+        public static AppListTraceEntry ToResponseModel(this AppLogsQueryRow<ListTraceQueryResponse> row)
+        {
+            return new AppListTraceEntry
+            {
+                ProblemId = row.Data.problemId,
+                Target = row.Data.target,
+                TestLocation = row.Data.location,
+                TestName = row.Data.name,
+                Type = row.Data.type,
+                OperationName = row.Data.operation_Name,
+                ResultCode = row.Data.resultCode,
+                Traces = (JsonSerializer.Deserialize(row.Data.traces!, ApplicationInsightsJsonContext.Default.ListTraceIdEntry) ?? new List<TraceIdEntry>()).Distinct().ToList()
+            };
+        }
+
+        public static SpanSummary ToResponseModel(this AppLogsQueryRow<DistributedTraceQueryResponse> row)
+        {
+            DateTime end = row.Data.timestamp?.UtcDateTime ?? default;
+
+            string? target = row.Data.target;
+            string? problemId = row.Data.problemId;
+            string? operationName = row.Data.operation_Name;
+            string? name = row.Data.name;
+            TimeSpan? duration = TimeSpan.FromMilliseconds(row.Data.duration ?? 0);
+
+            var spanDetails = new SpanSummary
+            {
+                SpanId = row.Data.id,
+                ParentId = row.Data.operation_ParentId,
+                ItemId = row.Data.itemId,
+                ResponseCode = row.Data.resultCode,
+                ItemType = row.Data.itemType,
+                IsSuccessful = !string.IsNullOrEmpty(row.Data.success) ? bool.Parse(row.Data.success!) : null,
+                ChildSpans = new List<SpanSummary>(),
+                Properties = row.OtherColumns.Select(t => new KeyValuePair<string, string>(t.Key, t.Value?.ToString()!)).ToList(),
+                Name = target ?? problemId ?? operationName ?? name,
+                Duration = duration,
+                StartTime = end.Subtract(duration ?? TimeSpan.Zero),
+                EndTime = end,
+            };
+
+            return spanDetails;
+        }
+
+        public static AppImpactResult ToResponseModel(this AppLogsQueryRow<ImpactQueryResponse> row)
+        {
+            return new AppImpactResult
+            {
+                CloudRoleName = row.Data.cloud_RoleName ?? "Unknown",
+                ImpactedInstances = row.Data.ImpactedInstances,
+                TotalInstances = row.Data.TotalInstances,
+                ImpactedCount = row.Data.ImpactedRequests,
+                TotalCount = row.Data.TotalRequests,
+                ImpactedCountPercent = row.Data.ImpactedRequestsPercent,
+                ImpactedInstancePercent = row.Data.ImpactedInstancePercent
+            };
+        }
+
+        public static AppCorrelateTimeSeries ToResponseModel(this AppLogsQueryRow<TimeSeriesCorrelationResponse> row)
+        {
+            string split = row.Data.split ?? "Unknown";
+            double[]? value = JsonSerializer.Deserialize(row.Data.Value?.ToString()!, MonitorJsonContext.Default.DoubleArray);
+
+            return new AppCorrelateTimeSeries
+            {
+                Data = value ?? Array.Empty<double>(),
+                Label = split
+            };
+        }
+    }
+}

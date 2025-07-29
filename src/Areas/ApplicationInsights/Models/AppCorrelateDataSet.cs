@@ -13,7 +13,7 @@ namespace AzureMcp.Areas.ApplicationInsights.Models
         /// The list of filters applied to this dataset
         /// </summary>
         [JsonPropertyName("filters")]
-        public string Filters { get; set; } = string.Empty;
+        public string[] Filters { get; set; } = Array.Empty<string>();
         /// <summary>
         /// The split by dimension for this dataset
         /// </summary>

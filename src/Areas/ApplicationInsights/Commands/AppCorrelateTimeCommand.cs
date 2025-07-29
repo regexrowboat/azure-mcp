@@ -30,7 +30,9 @@ public sealed class AppCorrelateTimeCommand(ILogger<AppCorrelateTimeCommand> log
         [
             {
                 "table": "requests",
-                "filters": "success=false",
+                "filters": [
+                    "success=\"false\""
+                 ],
                 "splitBy": "resultCode"
             }
         ]
@@ -39,11 +41,15 @@ public sealed class AppCorrelateTimeCommand(ILogger<AppCorrelateTimeCommand> log
         [
             {
                 "table": "requests",
-                "filters": "resultCode=\"500\""
+                "filters": [
+                    "resultCode=\"500\""
+                ]
             },
             {
                 "table": "exceptions",
-                "filters": "type=\"System.InvalidOperationException\""
+                "filters": [
+                    "type=\"System.InvalidOperationException\""
+                ]
             }
         ]
 

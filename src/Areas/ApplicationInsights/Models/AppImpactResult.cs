@@ -10,19 +10,19 @@ namespace AzureMcp.Areas.ApplicationInsights.Models
         [JsonPropertyName("impactedInstances")]
         public int ImpactedInstances { get; set; }
 
-        [JsonPropertyName("impactedRequests")]
-        public int ImpactedRequests { get; set; }
+        [JsonPropertyName("impactedCount")]
+        public int ImpactedCount { get; set; }
 
-        [JsonPropertyName("totalRequests")]
-        public int TotalRequests { get; set; }
+        [JsonPropertyName("totalCount")]
+        public int TotalCount { get; set; }
 
         [JsonPropertyName("totalInstances")]
         public int TotalInstances { get; set; }
 
-        [JsonPropertyName("impactedRequestPercent")]
-        public double ImpactedRequestsPercentage { get; set; }
+        [JsonPropertyName("impactedCountPercent")]
+        public double ImpactedCountPercent { get; set; }
 
         [JsonPropertyName("impactedInstancePercent")]
-        public double ImpactedInstancePercentage { get; set; }
+        public double ImpactedInstancePercent { get; set; }
     }
 }

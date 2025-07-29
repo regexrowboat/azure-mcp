@@ -1,9 +1,7 @@
 ﻿using AzureMcp.Areas.ApplicationInsights.Models;
 using AzureMcp.Areas.ApplicationInsights.Options;
 using AzureMcp.Areas.ApplicationInsights.Services;
-using AzureMcp.Areas.Monitor.Options;
 using AzureMcp.Commands;
-using AzureMcp.Commands.Monitor;
 using Microsoft.Extensions.Logging;
 
 namespace AzureMcp.Areas.ApplicationInsights.Commands
@@ -19,7 +17,7 @@ namespace AzureMcp.Areas.ApplicationInsights.Commands
 
         // Define options from OptionDefinitions
         private readonly Option<string> _tableOption = ApplicationInsightsOptionDefinitions.Table;
-        private readonly Option<string> _filtersOption = ApplicationInsightsOptionDefinitions.Filters;
+        private readonly Option<string[]> _filtersOption = ApplicationInsightsOptionDefinitions.Filters;
         private readonly Option<string> _startTimeOption = ApplicationInsightsOptionDefinitions.StartTime;
         private readonly Option<string> _endTimeOption = ApplicationInsightsOptionDefinitions.EndTime;
 
@@ -33,18 +31,18 @@ namespace AzureMcp.Areas.ApplicationInsights.Commands
 
             Example usage:
             Filter to dependency failures
-            - table:dependencies
-            - filters:"success='false'"
+            "table": "dependencies",
+            "filters": ["success=\"false\""]
 
             Filter to request failures with 500 code
-            - table:requests
-            - filters:"success='false',resultCode='500'"
+            "table": "requests",
+            "filters": ["success=\"false\"", "resultCode=\"500\""]
 
             Filter to requests slower than 95th percentile (use start and end time filters to filter to the duration spike). Any percentile is valid (e.g. 99p is also valid)
-            - table:requests
-            - filters:"duration=95p"
-            - start-time:"start of spike (ISO date)"
-            - end-time:"end of spike (ISO date)"
+            "table": "requests",
+            "filters": ["duration=\"95p\""],
+            "start-time":"start of spike (ISO date)",
+            "end-time":"end of spike (ISO date)"
 
             Use this tool for investigating issues with Application Insights resources.
             Required options:
@@ -74,7 +72,7 @@ namespace AzureMcp.Areas.ApplicationInsights.Commands
             options.Table = parseResult.GetValueForOption(_tableOption);
             options.StartTime = DateTimeOffset.Parse(parseResult.GetValueForOption(_startTimeOption)!).UtcDateTime;
             options.EndTime = DateTimeOffset.Parse(parseResult.GetValueForOption(_endTimeOption)!).UtcDateTime;
-            options.Filters = parseResult.GetValueForOption(_filtersOption);
+            options.Filters = parseResult.GetValueForOption(_filtersOption) ?? Array.Empty<string>();
             return options;
         }
 

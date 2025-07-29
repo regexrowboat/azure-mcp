@@ -88,7 +88,7 @@ namespace AzureMcp.Tests.Areas.ApplicationInsights.LiveTests
                 { "subscription", Settings.SubscriptionId },
                 { "resource-name", Settings.ResourceBaseName },
                 { "table", "availabilityResults" },
-                { "filters", "success='false'" }
+                { "filters", new[] { "success='false'" } }
             });
 
             Assert.NotNull(result);
@@ -163,7 +163,7 @@ namespace AzureMcp.Tests.Areas.ApplicationInsights.LiveTests
                 { "subscription", JsonSerializer.SerializeToElement(Settings.SubscriptionId) },
                 { "resource-name", JsonSerializer.SerializeToElement(Settings.ResourceBaseName) },
                 { "table", JsonSerializer.SerializeToElement("availabilityResults") },
-                { "filters", JsonSerializer.SerializeToElement("success='false'") }
+                { "filters", JsonSerializer.SerializeToElement(new string[] { "success='false'" }) }
             });
 
             var result = await listTraceCommand.ExecuteAsync(_commandContext!, args);

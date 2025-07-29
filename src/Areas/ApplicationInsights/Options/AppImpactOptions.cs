@@ -30,5 +30,5 @@ public class AppImpactOptions : BaseAppOptions
     /// Filters for the traces
     /// </summary>
     [JsonPropertyName(ApplicationInsightsOptionDefinitions.FiltersName)]
-    public string? Filters { get; set; }
+    public string[] Filters { get; set; } = Array.Empty<string>();
 }

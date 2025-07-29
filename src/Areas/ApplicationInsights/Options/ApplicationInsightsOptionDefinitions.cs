@@ -103,11 +103,13 @@ namespace AzureMcp.Areas.ApplicationInsights.Options
             IsRequired = true
         };
 
-        public static readonly Option<string> Filters = new Option<string>(
+        public static readonly Option<string[]> Filters = new Option<string[]>(
             $"--{FiltersName}",
-            "The filters to apply to the trace results. A comma-separated list of 'dimension=value'. Dimension names should be valid Application Insights column names. (e.g. \"success='false',resultCode='500'\")")
+            "The filters to apply to the trace results. JSON array of \"dimension=\\\"value\\\"\". Dimension names should be valid Application Insights column names. (e.g. [ \"success=\\\"false\\\"\", \"resultCode=\\\"500\\\"\" ])")
         {
-            IsRequired = false
+            IsRequired = false,
+            Arity = ArgumentArity.ZeroOrMore,
+            AllowMultipleArgumentsPerToken = true
         };
 
         public static readonly Option<AppCorrelateDataSetParseResult> DataSets = new(
@@ -160,7 +162,7 @@ namespace AzureMcp.Areas.ApplicationInsights.Options
             },
             isDefault: false,
             "The data sets to include in the correlation analysis. This is a JSON array with one or more data sets to compare, formatted as follows:" +
-            "[{\"table\":\"The name of the table to perform correlation analysis on. Should be a valid Application Insights table name\",\"filters\":\"A comma-separated list of 'dimension=value'. Dimension names should be valid Application Insights column names\",\"splitBy\":\"A single dimension to split by, or null (if data set should not be split). This should be a valid Application Insights column name.\",\"aggregation\":\"The aggregation method to use. Default is 'Count'. Valid values are 'Count', 'Average' and '95thPercentile'.\"}]"
+            "[{\"table\":\"The name of the table to perform correlation analysis on. Should be a valid Application Insights table name\",\"filters\":[ \"JSON array with one or more filters represented as \"dimension=\\\"value\\\". Dimension names should be valid Application Insights column names\" ],\"splitBy\":\"A single dimension to split by, or null (if data set should not be split). This should be a valid Application Insights column name.\",\"aggregation\":\"The aggregation method to use. Default is 'Count'. Valid values are 'Count', 'Average' and '95thPercentile'.\"}]"
         )
         {
             IsRequired = true
