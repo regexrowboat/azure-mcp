@@ -16,13 +16,13 @@ namespace AzureMcp.Areas.ApplicationInsights.Models.Query
                 Type = row.Data.type,
                 OperationName = row.Data.operation_Name,
                 ResultCode = row.Data.resultCode,
-                Traces = (JsonSerializer.Deserialize(row.Data.traces!, ApplicationInsightsJsonContext.Default.ListTraceIdEntry) ?? new List<TraceIdEntry>()).Distinct().ToList()
+                Traces = string.IsNullOrEmpty(row.Data.traces) ? new List<TraceIdEntry>() : (JsonSerializer.Deserialize(row.Data.traces!, ApplicationInsightsJsonContext.Default.ListTraceIdEntry) ?? new List<TraceIdEntry>()).Distinct().ToList()
             };
         }
 
         public static SpanSummary ToResponseModel(this AppLogsQueryRow<DistributedTraceQueryResponse> row)
         {
-            DateTime end = row.Data.timestamp?.UtcDateTime ?? default;
+            DateTime? end = row.Data.timestamp?.UtcDateTime;
 
             string? target = row.Data.target;
             string? problemId = row.Data.problemId;
@@ -39,11 +39,11 @@ namespace AzureMcp.Areas.ApplicationInsights.Models.Query
                 ItemType = row.Data.itemType,
                 IsSuccessful = !string.IsNullOrEmpty(row.Data.success) ? bool.Parse(row.Data.success!) : null,
                 ChildSpans = new List<SpanSummary>(),
-                Properties = row.OtherColumns.Select(t => new KeyValuePair<string, string>(t.Key, t.Value?.ToString()!)).ToList(),
+                Properties = row.OtherColumns.Where(t => t.Key != null && t.Value != null).Select(t => new KeyValuePair<string, string>(t.Key, t.Value?.ToString()!)).ToList(),
                 Name = target ?? problemId ?? operationName ?? name,
                 Duration = duration,
-                StartTime = end.Subtract(duration ?? TimeSpan.Zero),
-                EndTime = end,
+                StartTime = end.HasValue ? end.Value.Subtract(duration ?? TimeSpan.Zero) : default,
+                EndTime = end ?? default,
             };
 
             return spanDetails;
@@ -66,7 +66,7 @@ namespace AzureMcp.Areas.ApplicationInsights.Models.Query
         public static AppCorrelateTimeSeries ToResponseModel(this AppLogsQueryRow<TimeSeriesCorrelationResponse> row)
         {
             string split = row.Data.split ?? "Unknown";
-            double[]? value = JsonSerializer.Deserialize(row.Data.Value?.ToString()!, MonitorJsonContext.Default.DoubleArray);
+            double[]? value = row.Data.Value != null ? JsonSerializer.Deserialize(row.Data.Value?.ToString()!, MonitorJsonContext.Default.DoubleArray) : Array.Empty<double>();
 
             return new AppCorrelateTimeSeries
             {

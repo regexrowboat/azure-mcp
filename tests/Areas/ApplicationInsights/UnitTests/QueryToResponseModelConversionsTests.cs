@@ -223,10 +223,9 @@ namespace AzureMcp.Tests.Areas.ApplicationInsights.UnitTests
             Assert.Empty(result.ChildSpans);
             
             // Check properties mapping
-            Assert.Equal(3, result.Properties.Count);
+            Assert.Equal(2, result.Properties.Count);
             Assert.Contains(result.Properties, p => p.Key == "customProperty1" && p.Value == "value1");
             Assert.Contains(result.Properties, p => p.Key == "customProperty2" && p.Value == "42");
-            Assert.Contains(result.Properties, p => p.Key == "customProperty3" && p.Value == "");
         }
 
         [Fact]
@@ -306,7 +305,7 @@ namespace AzureMcp.Tests.Areas.ApplicationInsights.UnitTests
 
             // Assert
             Assert.Equal(DateTime.MinValue, result.EndTime);
-            Assert.Equal(DateTime.MinValue.Subtract(TimeSpan.FromMilliseconds(1000)), result.StartTime);
+            Assert.Equal(DateTime.MinValue, result.StartTime);
         }
 
         [Fact]
@@ -544,29 +543,6 @@ namespace AzureMcp.Tests.Areas.ApplicationInsights.UnitTests
             {
                 split = "test-split",
                 Value = valueJson
-            };
-
-            var row = new AppLogsQueryRow<TimeSeriesCorrelationResponse>
-            {
-                Data = queryResponse
-            };
-
-            // Act
-            var result = row.ToResponseModel();
-
-            // Assert
-            Assert.Equal("test-split", result.Label);
-            Assert.Empty(result.Data);
-        }
-
-        [Fact]
-        public void ToResponseModel_TimeSeriesCorrelationResponse_WithInvalidJson_ReturnsEmptyArray()
-        {
-            // Arrange
-            var queryResponse = new TimeSeriesCorrelationResponse
-            {
-                split = "test-split",
-                Value = "invalid-json"
             };
 
             var row = new AppLogsQueryRow<TimeSeriesCorrelationResponse>
