@@ -54,10 +54,10 @@ namespace AzureMcp.Areas.ApplicationInsights.Models.Query
             return new AppImpactResult
             {
                 CloudRoleName = row.Data.cloud_RoleName ?? "Unknown",
-                ImpactedInstances = row.Data.ImpactedInstances,
-                TotalInstances = row.Data.TotalInstances,
-                ImpactedCount = row.Data.ImpactedRequests,
-                TotalCount = row.Data.TotalRequests,
+                ImpactedInstances = (int)row.Data.ImpactedInstances,
+                TotalInstances = (int)row.Data.TotalInstances,
+                ImpactedCount = (int)row.Data.ImpactedRequests,
+                TotalCount = (int)row.Data.TotalRequests,
                 ImpactedCountPercent = row.Data.ImpactedRequestsPercent,
                 ImpactedInstancePercent = row.Data.ImpactedInstancePercent
             };

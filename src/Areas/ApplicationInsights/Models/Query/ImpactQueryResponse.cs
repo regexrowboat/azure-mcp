@@ -3,13 +3,13 @@
     public class ImpactQueryResponse
     {
         public string? cloud_RoleName { get; set; }
-        public int ImpactedInstances { get; set; } = 0;
+        public long ImpactedInstances { get; set; } = 0;
 
-        public int TotalInstances { get; set; } = 0;
+        public long TotalInstances { get; set; } = 0;
 
-        public int ImpactedRequests { get; set; } = 0;
+        public long ImpactedRequests { get; set; } = 0;
 
-        public int TotalRequests { get; set; } = 0;
+        public long TotalRequests { get; set; } = 0;
 
         public double ImpactedRequestsPercent { get; set; } = 0.0;
 

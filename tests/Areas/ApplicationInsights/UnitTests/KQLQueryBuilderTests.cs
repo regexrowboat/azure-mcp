@@ -586,6 +586,16 @@ namespace AzureMcp.Tests.Areas.ApplicationInsights.UnitTests
         }
 
         [Fact]
+        public void GetImpact_Test()
+        {
+            var result = KQLQueryBuilder.GetImpact("requests", new string[]
+            {
+                "operation_Name=\"GET /rescuepet\"",
+                "success=\"false\""
+            });
+        }
+
+        [Fact]
         public void GetImpact_Requests_WithNoFilters()
         {
             var result = KQLQueryBuilder.GetImpact("requests", Array.Empty<string>());
