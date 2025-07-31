@@ -16,6 +16,11 @@ namespace AzureMcp.ApplicationInsights.Services
             {
                 // find the root spans
                 filteredSpans = _spans.Where(t => t.ParentSpan == null).ToList();
+                if (_spans.Count > 0 && filteredSpans.Count == 0)
+                {
+                    // If no root spans were found, return all spans
+                    filteredSpans = _spans;
+                }
             }
             else
             {

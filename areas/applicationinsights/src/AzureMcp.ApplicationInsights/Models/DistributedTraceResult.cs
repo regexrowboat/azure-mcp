@@ -37,7 +37,7 @@ public class DistributedTraceResult
             };
         }
 
-        string description = $"This represents a distributed trace. Parent/child relationships are represented by indentation. Columns: ItemId, ItemType, Name, Success, ResultCode, StartToEnd";
+        string description = $"This represents a distributed trace. Parent/child relationships are represented by indentation. Columns: ItemId, ItemType, Name, Success, ResultCode, StartToEnd (milliseconds)";
 
         DateTime startTime = spans.Min(s => s.StartTime);
 
@@ -46,10 +46,11 @@ public class DistributedTraceResult
         StringBuilder results = new StringBuilder();
 
         HashSet<int> visited = new HashSet<int>();
+        List<SpanSummary> allSpans = new List<SpanSummary>();
 
         foreach (var span in spans)
         {
-            AddSpan("", results, span, startTime, visited);
+            AddSpan("", results, span, startTime, visited, allSpans);
         }
 
         return new DistributedTraceResult
@@ -58,7 +59,7 @@ public class DistributedTraceResult
             TraceDetails = results.ToString(),
             StartTime = startTime,
             TraceId = traceId,
-            RelevantSpans = spans.Where(t => t.ItemType == "exception")
+            RelevantSpans = allSpans.Where(t => t.ItemType == "exception")
                 .Select(t => new SpanDetails
                 {
                     ItemId = t.ItemId,
@@ -67,14 +68,20 @@ public class DistributedTraceResult
         };
     }
 
-    private static void AddSpan(string indent, StringBuilder results, SpanSummary span, DateTime startTime, HashSet<int> visited)
+    private static void AddSpan(string indent, StringBuilder results, SpanSummary span, DateTime startTime, HashSet<int> visited, List<SpanSummary> allSpans)
     {
+        if (visited.Contains(span.RowId))
+        {
+            // Avoid processing the same span multiple times
+            return;
+        }
         visited.Add(span.RowId);
         string success = span.ItemType == "exception" ? "⚠️" : span.IsSuccessful.HasValue ? span.IsSuccessful.Value ? "✅" : "❌" : "❓";
         double start = (span.StartTime - startTime).TotalMilliseconds;
         double end = (span.EndTime - startTime).TotalMilliseconds;
         string duration = $"{Math.Round(start, 2)}->{Math.Round(end, 2)}";
         results.AppendLine($"{indent}{span.ItemId}, {span.ItemType}, {span.Name}, {success}, {span.ResponseCode}, {duration}");
+        allSpans.Add(span);
 
         var childSpans = span.ChildSpans.OrderBy(span => span.StartTime).ToList();
 
@@ -83,7 +90,7 @@ public class DistributedTraceResult
             // logic to avoid infinite loops in case of circular references
             if (!visited.Contains(child.RowId))
             {
-                AddSpan(indent + "    ", results, child, startTime, visited);
+                AddSpan(indent + "    ", results, child, startTime, visited, allSpans);
             }
         }
     }

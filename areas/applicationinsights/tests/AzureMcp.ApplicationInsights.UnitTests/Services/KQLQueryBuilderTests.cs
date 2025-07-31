@@ -1,10 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using AzureMcp.ApplicationInsights.Models;
 using AzureMcp.ApplicationInsights.Services;
 using Xunit;
 
-namespace AzureMcp.ApplicationInsights.UnitTests;
+namespace AzureMcp.ApplicationInsights.UnitTests.Services;
 
 [Trait("Area", "ApplicationInsights")]
 public class KQLQueryBuilderTests
@@ -716,7 +717,7 @@ public class KQLQueryBuilderTests
         DateTime start = DateTime.UtcNow.AddDays(-1);
         DateTime end = DateTime.UtcNow;
         string interval = "1h";
-        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AzureMcp.ApplicationInsights.Models.AppCorrelateDataSet
+        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AppCorrelateDataSet
         {
             Table = "requests",
         }, interval, start, end);
@@ -742,7 +743,7 @@ public class KQLQueryBuilderTests
         DateTime start = DateTime.UtcNow.AddDays(-1);
         DateTime end = DateTime.UtcNow;
         string interval = "1h";
-        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AzureMcp.ApplicationInsights.Models.AppCorrelateDataSet
+        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AppCorrelateDataSet
         {
             Table = "availabilityResults",
         }, interval, start, end);
@@ -768,7 +769,7 @@ public class KQLQueryBuilderTests
         DateTime start = DateTime.UtcNow.AddDays(-1);
         DateTime end = DateTime.UtcNow;
         string interval = "1h";
-        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AzureMcp.ApplicationInsights.Models.AppCorrelateDataSet
+        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AppCorrelateDataSet
         {
             Table = "requests",
             SplitBy = "client_Type"
@@ -805,7 +806,7 @@ public class KQLQueryBuilderTests
         DateTime start = DateTime.UtcNow.AddDays(-1);
         DateTime end = DateTime.UtcNow;
         string interval = "1h";
-        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AzureMcp.ApplicationInsights.Models.AppCorrelateDataSet
+        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AppCorrelateDataSet
         {
             Table = "requests",
             SplitBy = "client_Type",
@@ -846,7 +847,7 @@ public class KQLQueryBuilderTests
         DateTime start = DateTime.UtcNow.AddDays(-1);
         DateTime end = DateTime.UtcNow;
         string interval = "1h";
-        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AzureMcp.ApplicationInsights.Models.AppCorrelateDataSet
+        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AppCorrelateDataSet
         {
             Table = "requests",
             SplitBy = "client_Type",
@@ -884,7 +885,7 @@ public class KQLQueryBuilderTests
         DateTime start = DateTime.UtcNow.AddDays(-1);
         DateTime end = DateTime.UtcNow;
         string interval = "1h";
-        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AzureMcp.ApplicationInsights.Models.AppCorrelateDataSet
+        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AppCorrelateDataSet
         {
             Table = "requests",
             Aggregation = "Average"
@@ -911,7 +912,7 @@ public class KQLQueryBuilderTests
         DateTime start = DateTime.UtcNow.AddDays(-1);
         DateTime end = DateTime.UtcNow;
         string interval = "1h";
-        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AzureMcp.ApplicationInsights.Models.AppCorrelateDataSet
+        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AppCorrelateDataSet
         {
             Table = "requests",
             SplitBy = "client_Type",
@@ -949,7 +950,7 @@ public class KQLQueryBuilderTests
         DateTime start = DateTime.UtcNow.AddDays(-1);
         DateTime end = DateTime.UtcNow;
         string interval = "1h";
-        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AzureMcp.ApplicationInsights.Models.AppCorrelateDataSet
+        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AppCorrelateDataSet
         {
             Table = "requests",
             Aggregation = "95thPercentile"
@@ -976,7 +977,7 @@ public class KQLQueryBuilderTests
         DateTime start = DateTime.UtcNow.AddDays(-1);
         DateTime end = DateTime.UtcNow;
         string interval = "1h";
-        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AzureMcp.ApplicationInsights.Models.AppCorrelateDataSet
+        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AppCorrelateDataSet
         {
             Table = "requests",
             Filters = new string[] { "resultCode='200'", "operation_Name='GET /api/users'" }
@@ -1005,7 +1006,7 @@ public class KQLQueryBuilderTests
         DateTime start = DateTime.UtcNow.AddDays(-1);
         DateTime end = DateTime.UtcNow;
         string interval = "1h";
-        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AzureMcp.ApplicationInsights.Models.AppCorrelateDataSet
+        var result = KQLQueryBuilder.BuildTimeSeriesQuery(new AppCorrelateDataSet
         {
             Table = "exceptions",
         }, interval, start, end);
