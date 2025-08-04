@@ -1,5 +1,6 @@
 using Azure.Core;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ServiceProfiler.DataPlane.Client;
 
 namespace AzureMcp.ApplicationInsights.Services;
@@ -16,9 +17,6 @@ internal class DiagServiceClientFactory
     public DiagServiceClient CreateClient(TokenCredential tokenCredential)
     {
         DiagServiceClientOptions options = DiagServiceClientOptions.Create(DiagServiceClientOptions.Production, userAgent: "AzureMCP");
-        return ActivatorUtilities.CreateInstance<DiagServiceClient>(
-            _serviceProvider,
-            options,
-            tokenCredential);
+        return new DiagServiceClient(tokenCredential, options, _serviceProvider.GetRequiredService<ILogger<DiagServiceClient>>());
     }
 }

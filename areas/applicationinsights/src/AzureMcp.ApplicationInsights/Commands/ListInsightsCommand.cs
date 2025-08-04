@@ -46,6 +46,16 @@ public sealed class ListInsightsCommand(
         options.StartDateTimeUtc = parseResult.GetValueForOption(ProfilerOptionDefinitions.StartDateTimeUtc);
         options.EndDateTimeUtc = parseResult.GetValueForOption(ProfilerOptionDefinitions.EndDateTimeUtc);
 
+        if (options.EndDateTimeUtc == default)
+        {
+            options.EndDateTimeUtc = DateTime.UtcNow;
+        }
+
+        if (options.StartDateTimeUtc == default)
+        {
+            options.StartDateTimeUtc = options.EndDateTimeUtc.AddDays(-1);
+        }
+
         return options;
     }
 
