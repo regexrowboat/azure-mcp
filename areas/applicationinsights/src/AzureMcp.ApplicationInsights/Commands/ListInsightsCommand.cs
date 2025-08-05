@@ -2,7 +2,7 @@ using Azure.Core;
 using AzureMcp.ApplicationInsights.Options;
 using AzureMcp.ApplicationInsights.Services;
 using AzureMcp.Core.Commands;
-using AzureMcp.Core.Models;
+using AzureMcp.Core.Services.Azure.Resource;
 using AzureMcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 
@@ -83,8 +83,22 @@ public sealed class ListInsightsCommand(
 
             context.Activity?.WithSubscriptionTag(options);
 
-            string resourceIdString = options.ResourceId ?? throw new InvalidOperationException("Application Insights Component resource id is required.");
-            ResourceIdentifier resolvedResourceId = ResourceIdentifier.Parse(resourceIdString);
+            // Resolve resource identifier - either use provided resource ID or build it from components
+            ResourceIdentifier resolvedResourceId;
+            if (!string.IsNullOrWhiteSpace(options.ResourceId))
+            {
+                resolvedResourceId = ResourceIdentifier.Parse(options.ResourceId);
+            }
+            else
+            {
+                // Fallback to building resource ID from subscription, resource group, and resource name
+                IResourceResolverService resourceResolverService = context.GetService<IResourceResolverService>();
+                resolvedResourceId = await resourceResolverService.ResolveResourceIdAsync(
+                    options.Subscription!,
+                    options.ResourceGroup!,
+                    "microsoft.insights/components",
+                    options.ResourceName!).ConfigureAwait(false);
+            }
 
             IProfilerInsightsService profilerInsightsService = context.GetService<IProfilerInsightsService>();
             var insights = await profilerInsightsService.GetInsightsAsync(

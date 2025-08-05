@@ -17,13 +17,17 @@ public abstract class BaseProfilerCommand(
         if (result.IsValid)
         {
             var resourceName = commandResult.GetValueForOption(ApplicationInsightsOptionDefinitions.ResourceName);
+            var resourceGroup = commandResult.GetValueForOption(ApplicationInsightsOptionDefinitions.ResourceGroup);
             var resourceId = commandResult.GetValueForOption(ApplicationInsightsOptionDefinitions.ResourceId);
 
-            // Enforce that at least one of resourceName or resourceId is provided
-            if (string.IsNullOrWhiteSpace(resourceName) && string.IsNullOrWhiteSpace(resourceId))
+            // Enforce that either resourceId is provided OR both resourceName and resourceGroup are provided
+            var hasResourceId = !string.IsNullOrWhiteSpace(resourceId);
+            var hasResourceNameAndGroup = !string.IsNullOrWhiteSpace(resourceName) && !string.IsNullOrWhiteSpace(resourceGroup);
+
+            if (!hasResourceId && !hasResourceNameAndGroup)
             {
                 result.IsValid = false;
-                result.ErrorMessage = "You must specify at least one of --resource-name or --resource-id for the Application Insights resource.";
+                result.ErrorMessage = "You must specify either --resource-id OR both --resource-name and --resource-group for the Application Insights resource.";
                 if (commandResponse != null)
                 {
                     commandResponse.Status = 400;
