@@ -217,6 +217,26 @@ namespace AzureMcp.ApplicationInsights.LiveTests
             //Assert.NotEmpty(traceResult?.Result?.TraceDetails!);
         }
 
+        [Fact]
+        [Trait("Category", "Live")]
+        public async Task Should_list_profiler_insights()
+        {
+            var result = await CallToolAsync(
+            "azmcp_profiler_list-insights",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-name", Settings.ResourceBaseName },
+                { "start-date-time-utc", DateTime.UtcNow.AddDays(-7) },
+                { "end-date-time-utc", DateTime.UtcNow },
+                { "max-insights", 10 }
+            });
+
+            Assert.NotNull(result);
+            // Note: The insights list may be empty if no profiling data is available
+            // This is expected behavior for the test
+        }
+
         private static JsonElement GetResult(CommandResponse response)
         {
             MemoryStream ms = new MemoryStream();
